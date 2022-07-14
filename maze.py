@@ -91,7 +91,7 @@ def runMaze():
     while len(open_set) > 0:
         current_node = open_set[0]
         for node in open_set[1:]:
-            if (node.F_cost < current_node.F_cost) or (node.F_cost == current_node.F_cost and node.H_cost < current_node.H_cost):
+            if (node.get_F_cost() < current_node.get_F_cost()) or (node.get_F_cost() == current_node.get_F_cost() and node.H_cost < current_node.H_cost):
                 current_node = node
         open_set.pop(current_node)
         closed_set.append(current_node)
