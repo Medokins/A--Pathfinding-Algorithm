@@ -1,22 +1,11 @@
 import pygame
-import numpy as np
 from node import Node
+from settings import *
 
 pygame.init()
 WINDOW_SIZE = (1000, 1000)
 screen = pygame.display.set_mode(WINDOW_SIZE)
 pygame.display.set_caption("Maze Creator")
-
-SQUARE_SIZE = 50
-
-BG_COLOR = (253, 244, 220)
-START = (0, 255, 0)
-END = (255, 0, 0)
-WALL = (0, 0, 0)
-
-AVAILABLE = (118, 187, 104)
-PATHED = (249, 56, 34)
-FINAL_PATH = (144, 224, 247)
 
 class Maze:
     def __init__(self):
@@ -87,16 +76,27 @@ def runMaze():
     maze_nodes = []
     for x in range(0, WINDOW_SIZE[0], SQUARE_SIZE):
         for y in range(0, WINDOW_SIZE[1], SQUARE_SIZE):
-            if (x,y) not in maze.walls:
-                maze_nodes.append(Node(coordinates = (x,y), walkable = True))
+            if (x,y) == maze.start_pos:
+                start_node = Node((x/SQUARE_SIZE,y/SQUARE_SIZE), walkable = True)
+            elif (x,y) == maze.end_pos:
+                target_node = Node((x/SQUARE_SIZE,y/SQUARE_SIZE), walkable = True)
+            elif (x,y) not in maze.walls:
+                maze_nodes.append(Node(coordinates = (x/SQUARE_SIZE,y/SQUARE_SIZE), walkable = True))
             else:
-                maze_nodes.append(Node(coordinates = (x,y), walkable = False))
+                maze_nodes.append(Node(coordinates = (x/SQUARE_SIZE,y/SQUARE_SIZE), walkable = False))
 
-    open = []
-    closed = []
+    open_set = [start_node]
+    closed_set = []
 
-    print(len(maze_nodes))
+    while len(open_set) > 0:
+        current_node = open_set[0]
+        for node in open_set[1:]:
+            if (node.F_cost < current_node.F_cost) or (node.F_cost == current_node.F_cost and node.H_cost < current_node.H_cost):
+                current_node = node
+        open_set.pop(current_node)
+        closed_set.append(current_node)
 
-    found_path = False
-    # while not found_path:
-    #     pass
+        if current_node == target_node:
+            quit()
+        else:
+            pass
