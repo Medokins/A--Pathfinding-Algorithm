@@ -7,7 +7,7 @@ class Node:
         # weight (for future adjustments)
         self.weight = weight
         # coordinates in maze
-        self.coordinates = coordinates
+        self.x, self.y = coordinates
         # distance from starting node
         self.G_cost = 0
         # distance from end node
