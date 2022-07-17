@@ -42,7 +42,6 @@ class Maze:
 
 def getNeighbours(node, maze_nodes):
     neighbours = []
-
     for x in range(-1, 2):
         for y in range(-1, 2):
             if x == 0 and y == 0:
@@ -58,6 +57,23 @@ def getNeighbours(node, maze_nodes):
                         neighbours.append(Node(coordinates = (checkX, checkY), walkable = False))
 
     return neighbours
+
+def getDistance(nodeA, nodeB):
+    distance_x = np.abs(nodeA.x - nodeB.x)
+    distance_y = np.abs(nodeA.y - nodeB.y)
+    if distance_x > distance_y:
+        return 14 * distance_y + 10 * (distance_x - distance_y)
+    else:
+        return 14 * distance_x + 10 * (distance_y - distance_x)
+
+def getPath(startNode, endNode):
+    path = []
+    current_node = endNode
+    while current_node != startNode:
+        path.append(current_node)
+        current_node = current_node.parent
+    path.reverse()
+    print(path)
 
 def runMaze():
     ######################################################## maze creation
@@ -93,13 +109,16 @@ def runMaze():
         
     ######################################################## path finding
     maze_nodes = np.empty((ARRAY_SIZE), dtype = Node)
+
     # creating grid of nodes
     for x in range(int(WINDOW_SIZE[0] / SQUARE_SIZE)):
         for y in range(int(WINDOW_SIZE[1] / SQUARE_SIZE)):
             if (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.start_pos:
                 start_node = Node((x,y), walkable = True)
+                maze_nodes[x][y] = start_node
             elif (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.end_pos:
                 target_node = Node((x,y), walkable = True)
+                maze_nodes[x][y] = target_node
             elif (x*SQUARE_SIZE,y*SQUARE_SIZE) not in maze.walls:
                 maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
             else:
@@ -111,15 +130,27 @@ def runMaze():
     while len(open_set) > 0:
         current_node = open_set[0]
         for node in open_set[1:]:
-            if (node.get_F_cost() < current_node.get_F_cost()) or (node.get_F_cost() == current_node.get_F_cost() and node.H_cost < current_node.H_cost):
-                current_node = node
+            if (node.get_F_cost() < current_node.get_F_cost()) or (node.get_F_cost() == current_node.get_F_cost()):
+                if node.H_cost < current_node.H_cost:
+                    current_node = node
 
         open_set.remove(current_node)
         closed_set.append(current_node)
 
         if current_node == target_node:
+            getPath(start_node, target_node)
             quit()
 
-        for neighbour in getNeighbours(current_node, maze_nodes):
+        neighbours = getNeighbours(current_node, maze_nodes)
+        for neighbour in neighbours:
             if (not neighbour.walkable) or (neighbour in closed_set):
-                pass
+                continue
+
+            newMovementCostToNeighbour = current_node.G_cost + getDistance(current_node, neighbour)
+            if (newMovementCostToNeighbour < neighbour.G_cost) or (neighbour not in open_set):
+                neighbour.G_cost = newMovementCostToNeighbour
+                neighbour.H_cost = getDistance(neighbour, target_node)
+                neighbour.parent = current_node
+
+                if neighbour not in open_set:
+                    open_set.append(neighbour)
