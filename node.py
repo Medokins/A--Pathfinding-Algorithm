@@ -12,6 +12,8 @@ class Node:
         self.G_cost = 0
         # distance from end node
         self.H_cost = 0
+        # parent
+        self.parent = None
 
         # color of node
         if walkable:
