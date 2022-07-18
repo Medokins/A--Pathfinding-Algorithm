@@ -11,7 +11,7 @@ class Node:
         # distance from starting node
         self.G_cost = 0
         # distance from end node
-        self.H_cost = 0
+        self.H_cost = None
         # parent
         self.parent = None
 
