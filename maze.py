@@ -51,10 +51,7 @@ def getNeighbours(node, maze_nodes):
                 checkY = node.y + y
 
                 if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
-                    if maze_nodes[checkX][checkY].walkable:
-                        neighbours.append(Node(coordinates = (checkX, checkY), walkable = True))
-                    else:
-                        neighbours.append(Node(coordinates = (checkX, checkY), walkable = False))
+                    neighbours.append(maze_nodes[checkX][checkY])
 
     return neighbours
 
@@ -73,7 +70,8 @@ def getPath(startNode, endNode):
         path.append(current_node)
         current_node = current_node.parent
     path.reverse()
-    print(path)
+    for node in path:
+        print(node.x, node.y)
 
 def runMaze():
     ######################################################## maze creation
@@ -124,15 +122,17 @@ def runMaze():
             else:
                 maze_nodes[x][y] = Node(coordinates = (x,y), walkable = False)
 
+    # list of nodes to process, starting with start_node
     open_set = [start_node]
+    # list of nodes that have been already processed
     closed_set = []
 
     while len(open_set) > 0:
         current_node = open_set[0]
+        # searching for lowest cost node
         for node in open_set[1:]:
-            if (node.get_F_cost() < current_node.get_F_cost()) or (node.get_F_cost() == current_node.get_F_cost()):
-                if node.H_cost < current_node.H_cost:
-                    current_node = node
+            if node.get_F_cost() < current_node.get_F_cost() or node.get_F_cost() == current_node.get_F_cost() and node.H_cost < current_node.H_cost:
+                current_node = node
 
         open_set.remove(current_node)
         closed_set.append(current_node)
@@ -141,14 +141,13 @@ def runMaze():
             getPath(start_node, target_node)
             quit()
 
-        neighbours = getNeighbours(current_node, maze_nodes)
-        for neighbour in neighbours:
-            if (not neighbour.walkable) or (neighbour in closed_set):
+        for neighbour in getNeighbours(current_node, maze_nodes):
+            if not neighbour.walkable or neighbour in closed_set:
                 continue
 
-            newMovementCostToNeighbour = current_node.G_cost + getDistance(current_node, neighbour)
-            if (newMovementCostToNeighbour < neighbour.G_cost) or (neighbour not in open_set):
-                neighbour.G_cost = newMovementCostToNeighbour
+            newCostToNeighbour = current_node.G_cost + getDistance(current_node, neighbour)
+            if (newCostToNeighbour < neighbour.G_cost) or (neighbour not in open_set):
+                neighbour.G_cost = newCostToNeighbour
                 neighbour.H_cost = getDistance(neighbour, target_node)
                 neighbour.parent = current_node
 
