@@ -131,15 +131,15 @@ def runMaze():
             for x in range(int(WINDOW_SIZE[0] / SQUARE_SIZE)):
                 for y in range(int(WINDOW_SIZE[1] / SQUARE_SIZE)):
                     if (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.start_pos:
-                        start_node = Node((x,y), walkable = True, color = START)
+                        start_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = start_node
                     elif (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.end_pos:
-                        target_node = Node((x,y), walkable = True, color = END)
+                        target_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = target_node
                     elif (x*SQUARE_SIZE,y*SQUARE_SIZE) not in maze.walls:
-                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, color = BG_COLOR)
+                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
                     else:
-                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = False, color = WALL)
+                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = False)
 
             # list of nodes to process, starting with start_node
             open_set = [start_node]
