@@ -7,7 +7,6 @@ from settings import *
 pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
 pygame.display.set_caption("Maze Creator")
-speed = 30
 
 class Maze:
     def __init__(self):
@@ -64,11 +63,28 @@ class Maze:
 
         pygame.display.update()
 
-def getNeighbours(node, maze_nodes):
+# get neighbours with diagonals
+def getNeighboursDiag(node, maze_nodes):
     neighbours = []
     for x in range(-1, 2):
         for y in range(-1, 2):
             if x == 0 and y == 0:
+                pass
+            else:
+                checkX = node.x + x
+                checkY = node.y + y
+
+                if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+                    neighbours.append(maze_nodes[checkX][checkY])
+
+    return neighbours
+
+# get neighbours without diagonals
+def getNeighboursNoDiag(node, maze_nodes):
+    neighbours = []
+    for x in range(-1, 2):
+        for y in range(-1, 2):
+            if x == y or (x,y) == (node.x - 1, node.y + 1) or (x,y) == (node.x + 1, node.y - 1):
                 pass
             else:
                 checkX = node.x + x
@@ -86,6 +102,7 @@ def getDistance(nodeA, nodeB):
         return 14 * distance_y + 10 * (distance_x - distance_y)
     else:
         return 14 * distance_x + 10 * (distance_y - distance_x)
+
 
 def getPath(startNode, endNode):
     path = []
@@ -160,7 +177,7 @@ def runMaze():
                     getPath(start_node, target_node)
                     quit()
 
-                for neighbour in getNeighbours(current_node, maze_nodes):
+                for neighbour in getNeighboursNoDiag(current_node, maze_nodes):
                     if not neighbour.walkable or neighbour in closed_set:
                         continue
 
@@ -173,7 +190,7 @@ def runMaze():
                         if neighbour not in open_set:
                             open_set.append(neighbour)
                             maze.update(open_set, closed_set)
-                            time.sleep(1/speed)
+                            time.sleep(1/SPEED)
 
         else:
             maze.draw()
