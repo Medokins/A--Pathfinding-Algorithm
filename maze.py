@@ -1,3 +1,4 @@
+from matplotlib.style import available
 import pygame
 import numpy as np
 from node import Node
@@ -41,21 +42,23 @@ class Maze:
 
         pygame.display.update()
 
-    def update(self, avaialable, path):
+    def update(self, available, path, color = None):
         screen.fill(BG_COLOR)
         pygame.draw.rect(screen, START, pygame.Rect(self.start_pos[0], self.start_pos[1], SQUARE_SIZE, SQUARE_SIZE))
         pygame.draw.rect(screen, END, pygame.Rect(self.end_pos[0], self.end_pos[1], SQUARE_SIZE, SQUARE_SIZE))
 
-
         for wall in self.walls:
             pygame.draw.rect(screen, WALL, pygame.Rect(wall[0], wall[1], SQUARE_SIZE, SQUARE_SIZE))
 
-        for node in avaialable:
-            if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
-                pygame.draw.rect(screen, AVAILABLE, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+        if available != None:
+            for node in available:
+                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
+                    pygame.draw.rect(screen, AVAILABLE, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+        if color == None:
+            color = PATHED
         for node in path:
             if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
-                pygame.draw.rect(screen, FINAL_PATH, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+                pygame.draw.rect(screen, color, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
         for x in range(0, WINDOW_SIZE[0], SQUARE_SIZE):
             pygame.draw.line(screen, color = (0,0,0), start_pos = (0, x), end_pos = (WINDOW_SIZE[0], x))
@@ -82,16 +85,26 @@ def getNeighboursDiag(node, maze_nodes):
 # get neighbours without diagonals
 def getNeighboursNoDiag(node, maze_nodes):
     neighbours = []
-    for x in range(-1, 2):
-        for y in range(-1, 2):
-            if x == y or (x,y) == (node.x - 1, node.y + 1) or (x,y) == (node.x + 1, node.y - 1):
-                pass
-            else:
-                checkX = node.x + x
-                checkY = node.y + y
 
-                if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
-                    neighbours.append(maze_nodes[checkX][checkY])
+    checkX = node.x
+    checkY = node.y - 1
+    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+        neighbours.append(maze_nodes[checkX][checkY])
+
+    checkX = node.x
+    checkY = node.y + 1
+    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+        neighbours.append(maze_nodes[checkX][checkY])
+    
+    checkX = node.x - 1
+    checkY = node.y
+    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+        neighbours.append(maze_nodes[checkX][checkY])
+    
+    checkX = node.x + 1
+    checkY = node.y
+    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+        neighbours.append(maze_nodes[checkX][checkY])
 
     return neighbours
 
@@ -110,7 +123,8 @@ def getPath(startNode, endNode):
     while current_node != startNode:
         path.append(current_node)
         current_node = current_node.parent
-    return path.reverse()
+
+    return path
 
 def runMaze():
     ######################################################## maze creation
@@ -174,10 +188,12 @@ def runMaze():
                 closed_set.append(current_node)
 
                 if current_node == target_node:
-                    getPath(start_node, target_node)
+                    final_path = getPath(start_node, target_node)
+                    maze.update(available = open_set, path = final_path, color = FINAL_PATH)
+                    time.sleep(5)
                     quit()
 
-                for neighbour in getNeighboursNoDiag(current_node, maze_nodes):
+                for neighbour in getNeighboursDiag(current_node, maze_nodes):
                     if not neighbour.walkable or neighbour in closed_set:
                         continue
 
