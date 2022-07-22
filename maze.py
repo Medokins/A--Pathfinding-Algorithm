@@ -24,7 +24,7 @@ class Maze:
         self.walls = []
         self.special_nodes = []
     
-    def draw(self):
+    def draw(self, available = None, path = None, color = None):
         # set color to bg of maze
         screen.fill(BG_COLOR)
         font = pygame.font.SysFont('Calibri', 24)
@@ -35,6 +35,19 @@ class Maze:
             pygame.draw.rect(screen, END, pygame.Rect(self.end_pos[0], self.end_pos[1], SQUARE_SIZE, SQUARE_SIZE))
         for wall in self.walls:
             pygame.draw.rect(screen, WALL, pygame.Rect(wall[0], wall[1], SQUARE_SIZE, SQUARE_SIZE))
+
+        # live-draw of working algorithm
+        if available != None:
+            for node in available:
+                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
+                    pygame.draw.rect(screen, AVAILABLE, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+        if color == None:
+            color = PATHED
+        if path != None:
+            for node in path:
+                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
+                    pygame.draw.rect(screen, color, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
         # grid creation
         for x in range(0, WINDOW_SIZE[0] - SPACING + 1, SQUARE_SIZE):
             # horizontal lines
@@ -42,14 +55,14 @@ class Maze:
             # vertical lines
             pygame.draw.line(screen, color = (0,0,0), start_pos = (x, 0), end_pos = (x, WINDOW_SIZE[1]))
 
+
+        # quick menu on the right side:
         # separating lines
         for y in range(0, WINDOW_SIZE[1], WINDOW_SIZE[1] // 10):
             pygame.draw.line(screen, color = SEPARATING_LINE, start_pos = (WINDOW_SIZE[0] - SPACING, y), end_pos = (WINDOW_SIZE[0], y))
 
-        # quick menu on the right side
-        counter = 0
         # weights-colors with black border + weights text next to them
-
+        counter = 0
         for y in range(WINDOW_SIZE[1] // 40, WINDOW_SIZE[1], WINDOW_SIZE[1] // 10):
             text = font.render(f"Weight = {WEIGHTS[counter]}", False, SEPARATING_LINE, BG_COLOR)
             textRect = text.get_rect()
@@ -58,31 +71,6 @@ class Maze:
             pygame.draw.rect(screen, WEIGHTS_COLORS[counter], pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, SQUARE_SIZE, SQUARE_SIZE))
             pygame.draw.rect(screen, (0,0,0), pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, SQUARE_SIZE, SQUARE_SIZE), 2)
             counter += 1
-
-        pygame.display.update()
-
-    def update(self, available, path, color = None):
-        screen = pygame.display.set_mode((WINDOW_SIZE[0] - SPACING, WINDOW_SIZE[1]))
-        screen.fill(BG_COLOR)
-        pygame.draw.rect(screen, START, pygame.Rect(self.start_pos[0], self.start_pos[1], SQUARE_SIZE, SQUARE_SIZE))
-        pygame.draw.rect(screen, END, pygame.Rect(self.end_pos[0], self.end_pos[1], SQUARE_SIZE, SQUARE_SIZE))
-
-        for wall in self.walls:
-            pygame.draw.rect(screen, WALL, pygame.Rect(wall[0], wall[1], SQUARE_SIZE, SQUARE_SIZE))
-
-        if available != None:
-            for node in available:
-                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
-                    pygame.draw.rect(screen, AVAILABLE, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-        if color == None:
-            color = PATHED
-        for node in path:
-            if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
-                pygame.draw.rect(screen, color, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-
-        for x in range(0, WINDOW_SIZE[0] - SPACING, SQUARE_SIZE):
-            pygame.draw.line(screen, color = (0,0,0), start_pos = (0, x), end_pos = (WINDOW_SIZE[0] - SPACING, x))
-            pygame.draw.line(screen, color = (0,0,0), start_pos = (x, 0), end_pos = (x, WINDOW_SIZE[1]))
 
         pygame.display.update()
 
@@ -168,18 +156,17 @@ def runMaze():
                 if event.key == pygame.K_d:
                     maze.state = "choosing_weights"
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if maze.state == "choosing_start_pos":
-                    if maze.x < WINDOW_SIZE[0] - SPACING:
-                        maze.start_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
-                if maze.state == "choosing_end_pos":
-                    if maze.x < WINDOW_SIZE[0] - SPACING:
-                        maze.end_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
-                if maze.state == "creating_obstacles":
-                    if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
-                        maze.walls.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
-                if maze.state == "choosing_weights":
-                    if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
-                        maze.special_nodes.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
+                if maze.x < WINDOW_SIZE[0] - SPACING:
+                    if maze.state == "choosing_start_pos":
+                            maze.start_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
+                    if maze.state == "choosing_end_pos":
+                            maze.end_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
+                    if maze.state == "creating_obstacles":
+                        if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
+                            maze.walls.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
+                    if maze.state == "choosing_weights":
+                        if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
+                            maze.special_nodes.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
 
 
         if maze.state == 'ready':
@@ -187,7 +174,7 @@ def runMaze():
             maze_nodes = np.empty((ARRAY_SIZE), dtype = Node)
 
             # creating grid of nodes
-            for x in range(int(WINDOW_SIZE[0] - SPACING / SQUARE_SIZE)):
+            for x in range(int((WINDOW_SIZE[0] - SPACING) / SQUARE_SIZE)):
                 for y in range(int(WINDOW_SIZE[1] / SQUARE_SIZE)):
                     if (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.start_pos:
                         start_node = Node((x,y), walkable = True)
@@ -217,7 +204,7 @@ def runMaze():
 
                 if current_node == target_node:
                     final_path = getPath(start_node, target_node)
-                    maze.update(available = open_set, path = final_path, color = FINAL_PATH)
+                    maze.draw(available = [], path = final_path, color = FINAL_PATH)
                     time.sleep(5)
                     quit()
 
@@ -233,7 +220,7 @@ def runMaze():
 
                         if neighbour not in open_set:
                             open_set.append(neighbour)
-                            maze.update(open_set, closed_set)
+                            maze.draw(open_set, closed_set)
                             time.sleep(1/SPEED)
 
         else:
