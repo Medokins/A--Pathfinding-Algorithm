@@ -23,7 +23,9 @@ class Maze:
         self.end_pos = None
         self.walls = []
         self.special_nodes = []
-    
+        for _ in range(len(WEIGHTS)):
+            self.special_nodes.append([])
+
     def draw(self, available = None, path = None, color = None):
         # set color to bg of maze
         screen.fill(BG_COLOR)
@@ -35,6 +37,10 @@ class Maze:
             pygame.draw.rect(screen, END, pygame.Rect(self.end_pos[0], self.end_pos[1], SQUARE_SIZE, SQUARE_SIZE))
         for wall in self.walls:
             pygame.draw.rect(screen, WALL, pygame.Rect(wall[0], wall[1], SQUARE_SIZE, SQUARE_SIZE))
+
+        for i in range(len(WEIGHTS)):
+            for node in self.special_nodes[i]:
+                pygame.draw.rect(screen, WEIGHTS_COLORS[i], pygame.Rect(node[0], node[1], SQUARE_SIZE, SQUARE_SIZE))
 
         # live-draw of working algorithm
         if available != None:
@@ -153,8 +159,12 @@ def runMaze():
                     maze.state = "choosing_end_pos"
                 if event.key == pygame.K_w:
                     maze.state = "creating_obstacles"
-                if event.key == pygame.K_d:
+                # if event is number being pressed => number = weight and user is choosing weighted nodes
+                # based on the number that has been pressed
+                if event.unicode.isdigit():
+                    weight = int(event.unicode)
                     maze.state = "choosing_weights"
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if maze.x < WINDOW_SIZE[0] - SPACING:
                     if maze.state == "choosing_start_pos":
@@ -166,8 +176,7 @@ def runMaze():
                             maze.walls.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
                     if maze.state == "choosing_weights":
                         if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
-                            maze.special_nodes.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
-
+                            maze.special_nodes[weight].append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
 
         if maze.state == 'ready':
             # path finding
@@ -176,16 +185,19 @@ def runMaze():
             # creating grid of nodes
             for x in range(int((WINDOW_SIZE[0] - SPACING) / SQUARE_SIZE)):
                 for y in range(int(WINDOW_SIZE[1] / SQUARE_SIZE)):
+                    for i in range(len(WEIGHTS)):
+                        if (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.special_nodes[i]:
+                            maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, weight = i + 1)
                     if (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.start_pos:
                         start_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = start_node
                     elif (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.end_pos:
                         target_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = target_node
-                    elif (x*SQUARE_SIZE,y*SQUARE_SIZE) not in maze.walls:
-                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
-                    else:
+                    elif (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.walls:
                         maze_nodes[x][y] = Node(coordinates = (x,y), walkable = False)
+                    else:
+                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
 
             # list of nodes to process, starting with start_node
             open_set = [start_node]
