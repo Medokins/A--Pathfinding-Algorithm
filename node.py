@@ -22,4 +22,4 @@ class Node:
             self.color = WALL
     
     def get_F_cost(self):
-        return self.G_cost + self.H_cost + self.weight
+        return self.G_cost + self.H_cost
