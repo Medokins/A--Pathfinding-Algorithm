@@ -1,9 +1,10 @@
-from matplotlib.style import available
 import pygame
 import numpy as np
 from node import Node
 import time
 from settings import *
+
+from heap import Heap
 
 pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
@@ -44,7 +45,8 @@ class Maze:
 
         # live-draw of working algorithm
         if available != None:
-            for node in available:
+            for i in range(available.currentItemCount):
+                node = available.items[i]
                 if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
                     pygame.draw.rect(screen, AVAILABLE, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
         if color == None:
@@ -200,23 +202,18 @@ def runMaze():
                         maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
 
             # list of nodes to process, starting with start_node
-            open_set = [start_node]
+            open_set = Heap(ARRAY_SIZE[0] * ARRAY_SIZE[1])
+            open_set.add(start_node)
             # list of nodes that have been already processed
             closed_set = []
 
-            while len(open_set) > 0:
-                current_node = open_set[0]
-                # searching for lowest cost node
-                for node in open_set[1:]:
-                    if node.get_F_cost() < current_node.get_F_cost() or node.get_F_cost() == current_node.get_F_cost() and node.H_cost < current_node.H_cost:
-                        current_node = node
-
-                open_set.remove(current_node)
+            while open_set.currentItemCount > 0:
+                current_node = open_set.removeFirst()
                 closed_set.append(current_node)
 
                 if current_node == target_node:
                     final_path = getPath(start_node, target_node)
-                    maze.draw(available = [], path = final_path, color = FINAL_PATH)
+                    maze.draw(available = None, path = final_path, color = FINAL_PATH)
                     time.sleep(5)
                     quit()
 
@@ -225,13 +222,13 @@ def runMaze():
                         continue
 
                     newCostToNeighbour = current_node.G_cost + getDistance(current_node, neighbour)
-                    if (newCostToNeighbour < neighbour.G_cost) or (neighbour not in open_set):
+                    if (newCostToNeighbour < neighbour.G_cost) or (not open_set.contains(neighbour)):
                         neighbour.G_cost = newCostToNeighbour
                         neighbour.H_cost = getDistance(neighbour, target_node)
                         neighbour.parent = current_node
 
-                        if neighbour not in open_set:
-                            open_set.append(neighbour)
+                        if not open_set.contains(neighbour):
+                            open_set.add(neighbour)
                             maze.draw(open_set, closed_set)
                             time.sleep(1/SPEED)
 
