@@ -240,6 +240,7 @@ def runMaze():
                             maze.draw(open_set, closed_set)
                             time.sleep(1/SPEED)
                         else:
+                            # if better path to given node is found, update it
                             open_set.updateItem(neighbour)
 
         else:
