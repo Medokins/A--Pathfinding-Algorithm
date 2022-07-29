@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from regex import P
 from node import Node
 import time
 from settings import *
@@ -177,6 +178,7 @@ def runMaze():
                         if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
                             maze.walls.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
                     if maze.state == "choosing_weights":
+                        # row in my 2d array is corresponding to weight of given node
                         if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
                             maze.special_nodes[weight].append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
 
@@ -187,9 +189,6 @@ def runMaze():
             # creating grid of nodes
             for x in range(int((WINDOW_SIZE[0] - SPACING) / SQUARE_SIZE)):
                 for y in range(int(WINDOW_SIZE[1] / SQUARE_SIZE)):
-                    for i in range(len(WEIGHTS)):
-                        if (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.special_nodes[i]:
-                            maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, weight = i + 1)
                     if (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.start_pos:
                         start_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = start_node
@@ -200,6 +199,9 @@ def runMaze():
                         maze_nodes[x][y] = Node(coordinates = (x,y), walkable = False)
                     else:
                         maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
+                    for i in range(len(WEIGHTS)):
+                        if (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.special_nodes[i]:
+                            maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, weight = i + 1)
 
             # list of nodes to process, starting with start_node
             open_set = Heap(ARRAY_SIZE[0] * ARRAY_SIZE[1])
@@ -214,14 +216,20 @@ def runMaze():
                 if current_node == target_node:
                     final_path = getPath(start_node, target_node)
                     maze.draw(available = None, path = final_path, color = FINAL_PATH)
-                    time.sleep(5)
-                    quit()
+                    while True:
+                        for event in pygame.event.get():
+                            if event.type == pygame.QUIT:
+                                pygame.quit()
+                                quit()
+                            if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                                pygame.quit()
+                                quit()
 
                 for neighbour in getNeighboursDiag(current_node, maze_nodes):
                     if not neighbour.walkable or neighbour in closed_set:
                         continue
-
-                    newCostToNeighbour = current_node.G_cost + getDistance(current_node, neighbour)
+                    
+                    newCostToNeighbour = current_node.G_cost + getDistance(current_node, neighbour) + neighbour.weight
                     if (newCostToNeighbour < neighbour.G_cost) or (not open_set.contains(neighbour)):
                         neighbour.G_cost = newCostToNeighbour
                         neighbour.H_cost = getDistance(neighbour, target_node)
@@ -231,6 +239,8 @@ def runMaze():
                             open_set.add(neighbour)
                             maze.draw(open_set, closed_set)
                             time.sleep(1/SPEED)
+                        else:
+                            open_set.updateItem(neighbour)
 
         else:
             maze.draw()
