@@ -20,6 +20,10 @@ class Maze:
         # state
         self.state = 'choosing'
 
+        # dragin variables
+        self.wall_draging = False
+        self.obstacle_draging = False
+
         # maze variables
         self.start_pos = None
         self.end_pos = None
@@ -161,26 +165,48 @@ def runMaze():
                 if event.key == pygame.K_e:
                     maze.state = "choosing_end_pos"
                 if event.key == pygame.K_w:
-                    maze.state = "creating_obstacles"
+                    if maze.state == "creating_obstacles":
+                        maze.state = "passive"
+                    else:
+                        maze.state = "creating_obstacles"
+                if event.key == pygame.K_d:
+                    maze.state = "deleting"
+                    
                 # if event is number being pressed => number = weight and user is choosing weighted nodes
                 # based on the number that has been pressed
                 if event.unicode.isdigit():
-                    weight = int(event.unicode)
-                    maze.state = "choosing_weights"
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if maze.x < WINDOW_SIZE[0] - SPACING:
+                    if maze.state == "choosing_weights":
+                        maze.state = "passive"
+                    else:
+                        weight = int(event.unicode)
+                        maze.state = "choosing_weights"
+            
+            if maze.x < WINDOW_SIZE[0] - SPACING:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     if maze.state == "choosing_start_pos":
                             maze.start_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
                     if maze.state == "choosing_end_pos":
                             maze.end_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
+
+                elif event.type == pygame.MOUSEMOTION:
                     if maze.state == "creating_obstacles":
                         if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
                             maze.walls.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
                     if maze.state == "choosing_weights":
                         # row in my 2d array is corresponding to weight of given node
                         if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
-                            maze.special_nodes[weight].append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
+                            maze.special_nodes[weight].append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE)) 
+                    if maze.state == "deleting":
+                        node = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
+                        if node in maze.walls:
+                            maze.walls.remove(node)
+                        try:
+                            if node in maze.special_nodes[weight]:
+                                maze.special_nodes[weight].remove(node)
+                        # Weight variable was not chosen yet
+                        except:
+                            pass
+
 
         if maze.state == 'ready':
             # path finding
@@ -240,7 +266,7 @@ def runMaze():
                             maze.draw(open_set, closed_set)
                             time.sleep(1/SPEED)
                         else:
-                            # if better path to given node is found, update it
+                            # if better path to given node is found, update that node's costs accordingly
                             open_set.updateItem(neighbour)
 
         else:
