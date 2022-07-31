@@ -1,10 +1,13 @@
+from email import header
+from tkinter import SE
 import pygame
 import numpy as np
-from regex import P
-from node import Node
+import pandas as pd
 import time
-from settings import *
+import os
 
+from settings import *
+from node import Node
 from heap import Heap
 
 pygame.init()
@@ -32,7 +35,7 @@ class Maze:
         for _ in range(len(WEIGHTS)):
             self.special_nodes.append([])
 
-    def draw(self, available = None, path = None, color = None):
+    def draw(self, available = None, path = None, color = None, save = False):
         # set color to bg of maze
         screen.fill(BG_COLOR)
         font = pygame.font.SysFont('Calibri', 24)
@@ -84,6 +87,50 @@ class Maze:
             pygame.draw.rect(screen, WEIGHTS_COLORS[counter], pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, SQUARE_SIZE, SQUARE_SIZE))
             pygame.draw.rect(screen, (0,0,0), pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, SQUARE_SIZE, SQUARE_SIZE), 2)
             counter += 1
+
+        if save:
+            input_box = pygame.Rect((WINDOW_SIZE[0] - 600)/2, (WINDOW_SIZE[1] - 200)/2, 600, 100)
+            color = INACTIVE_COLOR
+            active = False
+            text = ''
+            done = False
+
+            while not done:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        done = True
+                        return text
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if input_box.collidepoint(event.pos):
+                            active = not active
+                        else:
+                            active = False
+                        color = ACTIVE_COLOR if active else INACTIVE_COLOR
+                    if event.type == pygame.KEYDOWN:
+                        if active:
+                            if event.key == pygame.K_RETURN:
+                                done = True
+                                return text
+                            elif event.key == pygame.K_BACKSPACE:
+                                text = text[:-1]
+                            else:
+                                text += event.unicode
+
+                screen.fill(SAVING_BG_COLOR)
+
+                header = font.render("Enter file name: ", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                headerRect = header.get_rect()
+                headerRect.center = ((WINDOW_SIZE[0] - 600)/2 + 90,  (WINDOW_SIZE[1] - 200)/2 - 25)
+                screen.blit(header, headerRect)
+                
+                font = pygame.font.Font(None, 32)
+                txt_surface = font.render(text, True, color)
+                width = max(600, txt_surface.get_width()+10)
+                input_box.w = width
+                screen.blit(txt_surface, ((WINDOW_SIZE[0] - 600)/2 + 10, (WINDOW_SIZE[1] - 200)/2 + 35))
+                pygame.draw.rect(screen, color, input_box, 2)
+                pygame.display.flip()
+
 
         pygame.display.update()
 
@@ -246,10 +293,38 @@ def runMaze():
                         for event in pygame.event.get():
                             if event.type == pygame.QUIT:
                                 pygame.quit()
-                                quit()
-                            if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
-                                pygame.quit()
-                                quit()
+                                return final_path
+
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_s:
+                                    name = maze.draw(save=True)
+                                    df = pd.DataFrame(index=range(ARRAY_SIZE[0]), columns=range(ARRAY_SIZE[1]))
+                                    for x in range(ARRAY_SIZE[0]):
+                                        for y in range(ARRAY_SIZE[1]):
+                                            # if it's not a wall => it's walkable => check if it has weight to it
+                                            # else, mark wall as "-" (for better visualisation in dataframe)
+                                            if maze_nodes[x][y].walkable:
+                                                df[x][y] = maze_nodes[x][y].weight
+                                            #print(f"Column {node.x}, Row {node.y}, Walkable: {node.walkable}, Weight {node.weight}")
+                                            else:
+                                                df[x][y] = "-"
+
+                                    # at the end, override start_pos and end_pos with S and E accordingly
+                                    df[start_node.x][start_node.y] = "S"
+                                    df[target_node.x][target_node.y] = "E"
+
+                                    df.columns = [f"column {i:03}" for i in range(ARRAY_SIZE[0])]
+                                    df.index = [f"row {i:03}" for i in range(ARRAY_SIZE[1])]
+                                    df.to_csv(os.path.join("saved_mazes", f"{name}.csv"))
+
+                                    pygame.quit()
+                                    quit()
+
+                                if event.key == pygame.K_q:
+                                    pygame.quit()
+                                    return final_path
+
+
 
                 for neighbour in getNeighboursDiag(current_node, maze_nodes):
                     if not neighbour.walkable or neighbour in closed_set:
