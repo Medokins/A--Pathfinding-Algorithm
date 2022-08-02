@@ -1,5 +1,4 @@
 import pygame
-import pandas as pd
 import time
 
 from node import Node
@@ -153,11 +152,6 @@ def runMaze(maze_file = None):
                             maze.state = "creating_obstacles"
                     if event.key == pygame.K_d:
                         maze.state = "deleting"
-                    if event.key == pygame.K_i:
-                        if maze_file == None:
-                            print("Can't import file!")
-                        else:
-                            maze.state = "import"
                         
                     # if event is number being pressed => number = weight and user is choosing weighted nodes
                     # based on the number that has been pressed
@@ -205,18 +199,21 @@ def runMaze(maze_file = None):
             # creating grid of nodes
             for x in range(int((WINDOW_SIZE[0] - SPACING) / SQUARE_SIZE)):
                 for y in range(int(WINDOW_SIZE[1] / SQUARE_SIZE)):
-                    if (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.start_pos:
+                    # because when reading from file indexes are automatically correct
+                    check = (x*SQUARE_SIZE,y*SQUARE_SIZE)
+
+                    if check == maze.start_pos:
                         start_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = start_node
-                    elif (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.target_pos:
+                    elif check == maze.target_pos:
                         target_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = target_node
-                    elif (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.walls:
+                    elif check in maze.walls:
                         maze_nodes[x][y] = Node(coordinates = (x,y), walkable = False)
                     else:
                         maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
                     for i in range(len(WEIGHTS)):
-                        if (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.special_nodes[i]:
+                        if check in maze.special_nodes[i]:
                             maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, weight = WEIGHTS[i])
 
             # list of nodes to process, starting with start_node
@@ -247,7 +244,7 @@ def runMaze(maze_file = None):
                                             # if it's not a wall => it's walkable => check if it has weight to it
                                             # else, mark wall as "-" (for better visualisation in dataframe)
                                             if maze_nodes[x][y].walkable:
-                                                df[x][y] = maze_nodes[x][y].weight
+                                                df[x][y] = int(maze_nodes[x][y].weight)
                                             #print(f"Column {node.x}, Row {node.y}, Walkable: {node.walkable}, Weight {node.weight}")
                                             else:
                                                 df[x][y] = "-"
@@ -256,8 +253,8 @@ def runMaze(maze_file = None):
                                     df[start_node.x][start_node.y] = "S"
                                     df[target_node.x][target_node.y] = "E"
 
-                                    df.columns = [f"column {i:03}" for i in range(ARRAY_SIZE[0])]
-                                    df.index = [f"row {i:03}" for i in range(ARRAY_SIZE[1])]
+                                    df.columns = [f"|{i:03}|" for i in range(ARRAY_SIZE[0])]
+                                    df.index = [f"|{i:03}|" for i in range(ARRAY_SIZE[1])]
                                     df.to_csv(os.path.join("saved_mazes", f"{name}.csv"))
 
                                     pygame.quit()
