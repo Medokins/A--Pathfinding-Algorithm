@@ -1,5 +1,6 @@
 from settings import *
 import numpy as np
+import pandas as pd
 import os
 
 # get neighbours with diagonals
@@ -68,8 +69,23 @@ def decode_maze(file_name):
     target_pos = None
     walls = []
     special_nodes = [[] for _ in range(len(WEIGHTS))]
-    print(special_nodes)
-
     file = os.path.join("saved_mazes", f"{file_name}.csv")
-
-decode_maze("maze_1")
+    df = pd.read_csv(file)
+    df.drop("Unnamed: 0", axis = 1, inplace=True)
+    df.columns = range(df.columns.size)
+    for x in range(df.shape[1]):
+        for y in range(df.shape[0]):
+            character = df[x][y]
+            if character == "S":
+                start_pos = (x*SQUARE_SIZE,y*SQUARE_SIZE)
+            elif character == "E":
+                target_pos = (x*SQUARE_SIZE,y*SQUARE_SIZE)
+            elif character == "-":
+                walls.append((x*SQUARE_SIZE,y*SQUARE_SIZE))
+            else:
+                # had to do this bcs for some reason some zeros where strings
+                character = int(character)
+                if character != 0:
+                    special_nodes[WEIGHTS.index(character)].append((x*SQUARE_SIZE,y*SQUARE_SIZE))
+        
+    return start_pos, target_pos, walls, special_nodes
