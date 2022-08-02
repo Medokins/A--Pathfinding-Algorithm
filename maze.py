@@ -1,14 +1,10 @@
-from email import header
-from tkinter import SE
 import pygame
-import numpy as np
 import pandas as pd
 import time
-import os
 
-from settings import *
 from node import Node
 from heap import Heap
+from maze_functions import *
 
 pygame.init()
 screen = pygame.display.set_mode(WINDOW_SIZE)
@@ -29,11 +25,9 @@ class Maze:
 
         # maze variables
         self.start_pos = None
-        self.end_pos = None
+        self.target_pos = None
         self.walls = []
-        self.special_nodes = []
-        for _ in range(len(WEIGHTS)):
-            self.special_nodes.append([])
+        self.special_nodes = [[] for _ in range(len(WEIGHTS))]
 
     def draw(self, available = None, path = None, color = None, save = False):
         # set color to bg of maze
@@ -42,8 +36,8 @@ class Maze:
 
         if self.start_pos != None:
             pygame.draw.rect(screen, START, pygame.Rect(self.start_pos[0], self.start_pos[1], SQUARE_SIZE, SQUARE_SIZE))
-        if self.end_pos != None:
-            pygame.draw.rect(screen, END, pygame.Rect(self.end_pos[0], self.end_pos[1], SQUARE_SIZE, SQUARE_SIZE))
+        if self.target_pos != None:
+            pygame.draw.rect(screen, END, pygame.Rect(self.target_pos[0], self.target_pos[1], SQUARE_SIZE, SQUARE_SIZE))
         for wall in self.walls:
             pygame.draw.rect(screen, WALL, pygame.Rect(wall[0], wall[1], SQUARE_SIZE, SQUARE_SIZE))
 
@@ -55,13 +49,13 @@ class Maze:
         if available != None:
             for i in range(available.currentItemCount):
                 node = available.items[i]
-                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
+                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.target_pos}:
                     pygame.draw.rect(screen, AVAILABLE, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
         if color == None:
             color = PATHED
         if path != None:
             for node in path:
-                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.end_pos}:
+                if (node.x * SQUARE_SIZE, node.y * SQUARE_SIZE) not in {self.start_pos, self.target_pos}:
                     pygame.draw.rect(screen, color, pygame.Rect(node.x * SQUARE_SIZE, node.y * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
         # grid creation
@@ -134,127 +128,76 @@ class Maze:
 
         pygame.display.update()
 
-# get neighbours with diagonals
-def getNeighboursDiag(node, maze_nodes):
-    neighbours = []
-    for x in range(-1, 2):
-        for y in range(-1, 2):
-            if x == 0 and y == 0:
-                pass
-            else:
-                checkX = node.x + x
-                checkY = node.y + y
-
-                if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
-                    neighbours.append(maze_nodes[checkX][checkY])
-
-    return neighbours
-
-# get neighbours without diagonals
-def getNeighboursNoDiag(node, maze_nodes):
-    neighbours = []
-
-    checkX = node.x
-    checkY = node.y - 1
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
-        neighbours.append(maze_nodes[checkX][checkY])
-
-    checkX = node.x
-    checkY = node.y + 1
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
-        neighbours.append(maze_nodes[checkX][checkY])
-    
-    checkX = node.x - 1
-    checkY = node.y
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
-        neighbours.append(maze_nodes[checkX][checkY])
-    
-    checkX = node.x + 1
-    checkY = node.y
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
-        neighbours.append(maze_nodes[checkX][checkY])
-
-    return neighbours
-
-def getDistance(nodeA, nodeB):
-    distance_x = np.abs(nodeA.x - nodeB.x)
-    distance_y = np.abs(nodeA.y - nodeB.y)
-    if distance_x > distance_y:
-        return 14 * distance_y + 10 * (distance_x - distance_y)
-    else:
-        return 14 * distance_x + 10 * (distance_y - distance_x)
-
-
-def getPath(startNode, endNode):
-    path = []
-    current_node = endNode
-    while current_node != startNode:
-        path.append(current_node)
-        current_node = current_node.parent
-
-    return path
-
-def runMaze():
+def runMaze(maze_file = None):
     ######################################################## maze creation
     maze = Maze()
     while maze.state != 'end':
-        maze.x, maze.y = pygame.mouse.get_pos()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                maze.state = 'end'
-                pygame.quit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
-                    if maze.start_pos != None and maze.end_pos != None:
-                        maze.state = 'ready'
-                if event.key == pygame.K_s:
-                    maze.state = "choosing_start_pos"
-                if event.key == pygame.K_e:
-                    maze.state = "choosing_end_pos"
-                if event.key == pygame.K_w:
-                    if maze.state == "creating_obstacles":
-                        maze.state = "passive"
-                    else:
-                        maze.state = "creating_obstacles"
-                if event.key == pygame.K_d:
-                    maze.state = "deleting"
-                    
-                # if event is number being pressed => number = weight and user is choosing weighted nodes
-                # based on the number that has been pressed
-                if event.unicode.isdigit():
-                    if maze.state == "choosing_weights":
-                        maze.state = "passive"
-                    else:
-                        weight = int(event.unicode)
-                        maze.state = "choosing_weights"
-            
-            if maze.x < WINDOW_SIZE[0] - SPACING:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if maze.state == "choosing_start_pos":
-                            maze.start_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
-                    if maze.state == "choosing_end_pos":
-                            maze.end_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
+        if maze_file == None:
+            maze.x, maze.y = pygame.mouse.get_pos()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    maze.state = 'end'
+                    pygame.quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        if maze.start_pos != None and maze.target_pos != None:
+                            maze.state = 'ready'
+                    if event.key == pygame.K_s:
+                        maze.state = "choosing_start_pos"
+                    if event.key == pygame.K_e:
+                        maze.state = "choosing_target_pos"
+                    if event.key == pygame.K_w:
+                        if maze.state == "creating_obstacles":
+                            maze.state = "passive"
+                        else:
+                            maze.state = "creating_obstacles"
+                    if event.key == pygame.K_d:
+                        maze.state = "deleting"
+                    if event.key == pygame.K_i:
+                        if maze_file == None:
+                            print("Can't import file!")
+                        else:
+                            maze.state = "import"
+                        
+                    # if event is number being pressed => number = weight and user is choosing weighted nodes
+                    # based on the number that has been pressed
+                    if event.unicode.isdigit():
+                        if maze.state == "choosing_weights":
+                            maze.state = "passive"
+                        else:
+                            weight = int(event.unicode)
+                            maze.state = "choosing_weights"
+                
+                if maze.x < WINDOW_SIZE[0] - SPACING:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if maze.state == "choosing_start_pos":
+                                maze.start_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
+                        if maze.state == "choosing_target_pos":
+                                maze.target_pos = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
 
-                elif event.type == pygame.MOUSEMOTION:
-                    if maze.state == "creating_obstacles":
-                        if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
-                            maze.walls.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
-                    if maze.state == "choosing_weights":
-                        # row in my 2d array is corresponding to weight of given node
-                        if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.end_pos}:
-                            maze.special_nodes[weight].append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE)) 
-                    if maze.state == "deleting":
-                        node = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
-                        if node in maze.walls:
-                            maze.walls.remove(node)
-                        try:
-                            if node in maze.special_nodes[weight]:
-                                maze.special_nodes[weight].remove(node)
-                        # Weight variable was not chosen yet
-                        except:
-                            pass
-
-
+                    elif event.type == pygame.MOUSEMOTION:
+                        if maze.state == "creating_obstacles":
+                            if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.target_pos}:
+                                maze.walls.append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE))
+                        if maze.state == "choosing_weights":
+                            # row in my 2d array is corresponding to weight of given node
+                            if (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE) not in {maze.start_pos, maze.target_pos}:
+                                maze.special_nodes[weight].append((maze.x // SQUARE_SIZE * SQUARE_SIZE , maze.y // SQUARE_SIZE * SQUARE_SIZE)) 
+                        if maze.state == "deleting":
+                            node = (maze.x // SQUARE_SIZE * SQUARE_SIZE, maze.y // SQUARE_SIZE * SQUARE_SIZE)
+                            if node in maze.walls:
+                                maze.walls.remove(node)
+                            try:
+                                if node in maze.special_nodes[weight]:
+                                    maze.special_nodes[weight].remove(node)
+                            # Weight variable was not chosen yet
+                            except:
+                                pass
+        else:
+            # in progress
+            maze.start_pos, maze.target_pos, maze.walls, maze.special_nodes = decode_maze(maze_file)
+            maze.state = 'ready'
+        
         if maze.state == 'ready':
             # path finding
             maze_nodes = np.empty((ARRAY_SIZE), dtype = Node)
@@ -265,7 +208,7 @@ def runMaze():
                     if (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.start_pos:
                         start_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = start_node
-                    elif (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.end_pos:
+                    elif (x*SQUARE_SIZE,y*SQUARE_SIZE) == maze.target_pos:
                         target_node = Node((x,y), walkable = True)
                         maze_nodes[x][y] = target_node
                     elif (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.walls:
@@ -274,7 +217,7 @@ def runMaze():
                         maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
                     for i in range(len(WEIGHTS)):
                         if (x*SQUARE_SIZE,y*SQUARE_SIZE) in maze.special_nodes[i]:
-                            maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, weight = i + 1)
+                            maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, weight = WEIGHTS[i])
 
             # list of nodes to process, starting with start_node
             open_set = Heap(ARRAY_SIZE[0] * ARRAY_SIZE[1])
@@ -309,7 +252,7 @@ def runMaze():
                                             else:
                                                 df[x][y] = "-"
 
-                                    # at the end, override start_pos and end_pos with S and E accordingly
+                                    # at the end, override start_pos and target_pos with S and E accordingly
                                     df[start_node.x][start_node.y] = "S"
                                     df[target_node.x][target_node.y] = "E"
 
@@ -318,7 +261,7 @@ def runMaze():
                                     df.to_csv(os.path.join("saved_mazes", f"{name}.csv"))
 
                                     pygame.quit()
-                                    quit()
+                                    return final_path
 
                                 if event.key == pygame.K_q:
                                     pygame.quit()
