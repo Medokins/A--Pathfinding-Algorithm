@@ -63,7 +63,7 @@ def getPath(startNode, endNode):
 
     return path
 
-# function that returns start_pos, target_pos, walls array, special_nodes 2d array (in that order!)
+# function that returns start_pos, target_pos, walls array, special_nodes 2d array (in that order)
 def decode_maze(file_name):
     start_pos = None
     target_pos = None
