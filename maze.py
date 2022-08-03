@@ -16,7 +16,8 @@ class Maze:
         self.y = 0
 
         # state
-        self.state = 'choosing'
+        self.state = 'menu'
+        self.maze_file = None
 
         # dragin variables
         self.wall_draging = False
@@ -28,7 +29,7 @@ class Maze:
         self.walls = []
         self.special_nodes = [[] for _ in range(len(WEIGHTS))]
 
-    def draw(self, available = None, path = None, color = None, save = False):
+    def draw(self, available = None, path = None, color = None, start_menu = False, save = False):
         # set color to bg of maze
         screen.fill(BG_COLOR)
         font = pygame.font.SysFont('Calibri', 24)
@@ -81,6 +82,91 @@ class Maze:
             pygame.draw.rect(screen, (0,0,0), pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, SQUARE_SIZE, SQUARE_SIZE), 2)
             counter += 1
 
+        if start_menu:
+            font = pygame.font.Font(None, 32)
+            done = False
+            show_file_promt = False
+            input_box = pygame.Rect((WINDOW_SIZE[0] - 600)/2, (WINDOW_SIZE[1] - 200)/2, 600, 100)
+            color = INACTIVE_COLOR
+            active = False
+            file_text = ''
+            while not done:           
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        done = True
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if input_box.collidepoint(event.pos):
+                            active = not active
+                        else:
+                            active = False
+                        color = ACTIVE_COLOR if active else INACTIVE_COLOR
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_i:
+                            show_file_promt = True
+                        if active:
+                            if event.key == pygame.K_RETURN:
+                                done = True
+                                self.maze_file = file_text
+                            elif event.key == pygame.K_BACKSPACE:
+                                file_text = file_text[:-1]
+                            else:
+                                file_text += event.unicode
+                        elif event.key == pygame.K_RETURN:
+                            done = True
+
+                screen.fill(SAVING_BG_COLOR)
+
+                # import-file square
+                if show_file_promt:
+                    header = font.render("Enter file name: ", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    headerRect = header.get_rect()
+                    headerRect.center = ((WINDOW_SIZE[0] - 600)/2 + 90,  (WINDOW_SIZE[1] - 200)/2 - 25)
+                    screen.blit(header, headerRect)
+
+                    file_txt_surface = font.render(file_text, True, color, SAVING_BG_COLOR)
+                    width = max(600, file_txt_surface.get_width() + 10)
+                    input_box.w = width
+                    screen.blit(file_txt_surface, ((WINDOW_SIZE[0] - 600)/2 + 10, (WINDOW_SIZE[1] - 200)/2 + 35))
+                    pygame.draw.rect(screen, color, input_box, 2)
+
+                # headers
+                else:
+                    header = font.render("Key bindings: ", True, ACTIVE_COLOR, SAVING_BG_COLOR)
+                    headerRect = header.get_rect()
+                    headerRect.center = (100,  50)
+                    screen.blit(header, headerRect)
+
+                    # Key-bindings
+                    text_1 = font.render("I: Import maze_file", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_2 = font.render("S: Save maze_file (use after complition)", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_3 = font.render("Q/ENTER: Quit (use after complition)", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_4 = font.render("S: Set start position", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_5 = font.render("E: Set target position", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_6 = font.render("W: Draw walls", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_7 = font.render("Numbers [0 - 9]: Draw weights", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_8 = font.render("D: Delete walls/weights", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_9 = font.render("R: Run pathfinding algorithm", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    texts = [text_1, text_2, text_3, text_4, text_5, text_6, text_7, text_8, text_9]
+
+                    spacing = 150
+                    for text in texts:
+                        textRect = text.get_rect()
+                        textRect.left = 50
+                        textRect.bottom = spacing
+                        screen.blit(text, textRect)
+                        spacing += 50
+
+                    # Continue text
+                    contiune_text= font.render("Press ENTER to conitune", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    contiune_textRect = contiune_text.get_rect()
+                    contiune_textRect.left = 40
+                    contiune_textRect.bottom = 650
+                    screen.blit(contiune_text, contiune_textRect)
+
+                pygame.display.flip()
+
+            self.state = "passive"
+
         if save:
             input_box = pygame.Rect((WINDOW_SIZE[0] - 600)/2, (WINDOW_SIZE[1] - 200)/2, 600, 100)
             color = INACTIVE_COLOR
@@ -109,7 +195,7 @@ class Maze:
                             else:
                                 text += event.unicode
 
-                screen.fill(SAVING_BG_COLOR)
+                screen.fill(SAVING_BG_COLOR) 
 
                 header = font.render("Enter file name: ", True, INACTIVE_COLOR, SAVING_BG_COLOR)
                 headerRect = header.get_rect()
@@ -127,18 +213,20 @@ class Maze:
 
         pygame.display.update()
 
-def runMaze(maze_file = None):
+def runMaze():
     ######################################################## maze creation
     maze = Maze()
     while maze.state != 'end':
-        if maze_file == None:
+        if maze.state == "menu":
+            maze.draw(start_menu=True)
+        if maze.maze_file == None:
             maze.x, maze.y = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     maze.state = 'end'
                     pygame.quit()
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
+                    if event.key == pygame.K_r:
                         if maze.start_pos != None and maze.target_pos != None:
                             maze.state = 'ready'
                     if event.key == pygame.K_s:
@@ -189,7 +277,7 @@ def runMaze(maze_file = None):
                                 pass
         else:
             # in progress
-            maze.start_pos, maze.target_pos, maze.walls, maze.special_nodes = decode_maze(maze_file)
+            maze.start_pos, maze.target_pos, maze.walls, maze.special_nodes = decode_maze(maze.maze_file)
             maze.state = 'ready'
         
         if maze.state == 'ready':
@@ -260,11 +348,9 @@ def runMaze(maze_file = None):
                                     pygame.quit()
                                     return final_path
 
-                                if event.key == pygame.K_q:
+                                if event.key == pygame.K_q or event.key == pygame.K_RETURN:
                                     pygame.quit()
                                     return final_path
-
-
 
                 for neighbour in getNeighboursDiag(current_node, maze_nodes):
                     if not neighbour.walkable or neighbour in closed_set:
