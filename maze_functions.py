@@ -65,14 +65,20 @@ def getPath(startNode, endNode):
 
 # function that returns start_pos, target_pos, walls array, special_nodes 2d array (in that order)
 def decode_maze(file_name):
+    try:
+        file = os.path.join("saved_mazes", f"{file_name}.csv")
+        df = pd.read_csv(file)
+        df.drop("Unnamed: 0", axis = 1, inplace=True)
+        df.columns = range(df.columns.size)
+    except:
+        print(f"Import Error: there is no file named: {file_name}.csv in saved_mazes directory")
+        quit()
+
     start_pos = None
     target_pos = None
     walls = []
     special_nodes = [[] for _ in range(len(WEIGHTS))]
-    file = os.path.join("saved_mazes", f"{file_name}.csv")
-    df = pd.read_csv(file)
-    df.drop("Unnamed: 0", axis = 1, inplace=True)
-    df.columns = range(df.columns.size)
+
     for x in range(df.shape[1]):
         for y in range(df.shape[0]):
             character = df[x][y]
