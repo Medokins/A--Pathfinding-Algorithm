@@ -142,7 +142,7 @@ class Maze:
                     screen.blit(header, headerRect)
 
                     # Key-bindings
-                    text_1 = font.render("I: Import maze_file", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    text_1 = font.render("I: Import maze_file (use now)", True, INACTIVE_COLOR, SAVING_BG_COLOR)
                     text_2 = font.render("S: Save maze_file (use after complition)", True, INACTIVE_COLOR, SAVING_BG_COLOR)
                     text_3 = font.render("Q/ENTER: Quit (use after complition)", True, INACTIVE_COLOR, SAVING_BG_COLOR)
                     text_4 = font.render("S: Set start position", True, INACTIVE_COLOR, SAVING_BG_COLOR)
