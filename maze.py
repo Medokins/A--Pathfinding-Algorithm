@@ -79,8 +79,8 @@ class Maze:
             textRect = text.get_rect()
             textRect.center = (WINDOW_SIZE[0] - SPACING/2, y + WINDOW_SIZE[1] // 40)
             screen.blit(text, textRect)
-            pygame.draw.rect(screen, WEIGHTS_COLORS[counter], pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, SQUARE_SIZE, SQUARE_SIZE))
-            pygame.draw.rect(screen, (0,0,0), pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, SQUARE_SIZE, SQUARE_SIZE), 2)
+            pygame.draw.rect(screen, WEIGHTS_COLORS[counter], pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, 50, 50))
+            pygame.draw.rect(screen, (0,0,0), pygame.Rect(WINDOW_SIZE[0] - SPACING + 10, y, 50, 50), 2)
             counter += 1
 
         if start_menu:
@@ -318,6 +318,7 @@ def runMaze():
             closed_set = []
 
             getNeighbours = getNeighboursNoDiag if maze.no_diagonals_pathfinding else getNeighboursDiag
+            refresh_rate = 1/SPEED
 
             while open_set.currentItemCount > 0:
                 current_node = open_set.removeFirst()
@@ -374,7 +375,7 @@ def runMaze():
                         if not open_set.contains(neighbour):
                             open_set.add(neighbour)
                             maze.draw(open_set, closed_set)
-                            time.sleep(1/SPEED)
+                            time.sleep(refresh_rate)
                         else:
                             # if better path to given node is found, update that node's costs accordingly
                             open_set.updateItem(neighbour)
