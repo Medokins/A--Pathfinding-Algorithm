@@ -98,7 +98,22 @@ def decode_maze(file_name):
     return start_pos, target_pos, walls, special_nodes
 
 def get_instructions(path):
-    start_coordinates = (path[0].x, path[0].y)
-    for node in path:
-        print(node.x, node.y)
-    return 0
+    # R - go right, L - go left, D - go down, U - go up
+    instructions = []
+    current_node = path[0]
+    for next_node in path[1:]:
+        # go right
+        if next_node.x > current_node.x:
+            instructions.append('R')
+        # go left
+        elif next_node.x <  current_node.x:
+            instructions.append('L')
+        # go down
+        elif next_node.y > current_node.y:
+            instructions.append('D')
+        # go up
+        elif next_node.y <  current_node.y:
+            instructions.append('U')
+        current_node = next_node
+
+    return instructions
