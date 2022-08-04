@@ -18,6 +18,7 @@ class Maze:
         # state
         self.state = 'menu'
         self.maze_file = None
+        self.no_diagonals_pathfinding = False
 
         # dragin variables
         self.wall_draging = False
@@ -84,12 +85,13 @@ class Maze:
 
         if start_menu:
             font = pygame.font.Font(None, 32)
+            file_text = ''
+            color = INACTIVE_COLOR
+            input_box = pygame.Rect((WINDOW_SIZE[0] - 600)/2, (WINDOW_SIZE[1] - 200)/2, 600, 100)
+
+            active = False
             done = False
             show_file_promt = False
-            input_box = pygame.Rect((WINDOW_SIZE[0] - 600)/2, (WINDOW_SIZE[1] - 200)/2, 600, 100)
-            color = INACTIVE_COLOR
-            active = False
-            file_text = ''
             while not done:           
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -100,9 +102,12 @@ class Maze:
                         else:
                             active = False
                         color = ACTIVE_COLOR if active else INACTIVE_COLOR
+
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_i:
                             show_file_promt = True
+                        if event.key == pygame.K_n:
+                            self.no_diagonals_pathfinding = not self.no_diagonals_pathfinding
                         if active:
                             if event.key == pygame.K_RETURN:
                                 done = True
@@ -146,7 +151,9 @@ class Maze:
                     text_7 = font.render("Numbers [0 - 9]: Draw weights", True, INACTIVE_COLOR, SAVING_BG_COLOR)
                     text_8 = font.render("D: Delete walls/weights", True, INACTIVE_COLOR, SAVING_BG_COLOR)
                     text_9 = font.render("R: Run pathfinding algorithm", True, INACTIVE_COLOR, SAVING_BG_COLOR)
-                    texts = [text_1, text_2, text_3, text_4, text_5, text_6, text_7, text_8, text_9]
+                    text_10 = font.render("N: No-diagonals pathfinding option (currenty: ON)",  True, ACTIVE_COLOR, SAVING_BG_COLOR) if self.no_diagonals_pathfinding else \
+                              font.render("N: No-diagonals pathfinding option (currenty: OFF)", True, INACTIVE_COLOR, SAVING_BG_COLOR)
+                    texts = [text_1, text_2, text_3, text_4, text_5, text_6, text_7, text_8, text_9, text_10]
 
                     spacing = 150
                     for text in texts:
@@ -160,7 +167,7 @@ class Maze:
                     contiune_text= font.render("Press ENTER to conitune", True, INACTIVE_COLOR, SAVING_BG_COLOR)
                     contiune_textRect = contiune_text.get_rect()
                     contiune_textRect.left = 40
-                    contiune_textRect.bottom = 650
+                    contiune_textRect.bottom = spacing + 20
                     screen.blit(contiune_text, contiune_textRect)
 
                 pygame.display.flip()
@@ -310,6 +317,8 @@ def runMaze():
             # list of nodes that have been already processed
             closed_set = []
 
+            getNeighbours = getNeighboursNoDiag if maze.no_diagonals_pathfinding else getNeighboursDiag
+
             while open_set.currentItemCount > 0:
                 current_node = open_set.removeFirst()
                 closed_set.append(current_node)
@@ -352,7 +361,7 @@ def runMaze():
                                     pygame.quit()
                                     return final_path
 
-                for neighbour in getNeighboursDiag(current_node, maze_nodes):
+                for neighbour in getNeighbours(current_node, maze_nodes):
                     if not neighbour.walkable or neighbour in closed_set:
                         continue
                     
