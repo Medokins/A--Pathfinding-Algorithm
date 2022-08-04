@@ -60,7 +60,8 @@ def getPath(startNode, endNode):
     while current_node != startNode:
         path.append(current_node)
         current_node = current_node.parent
-
+    path.append(startNode)
+    path.reverse()
     return path
 
 # function that returns start_pos, target_pos, walls array, special_nodes 2d array (in that order)
@@ -95,3 +96,9 @@ def decode_maze(file_name):
                     special_nodes[WEIGHTS.index(character)].append((x*SQUARE_SIZE,y*SQUARE_SIZE))
         
     return start_pos, target_pos, walls, special_nodes
+
+def get_instructions(path):
+    start_coordinates = (path[0].x, path[0].y)
+    for node in path:
+        print(node.x, node.y)
+    return 0
