@@ -1,1 +1,6 @@
 __pycache__
+anyio
+mcpi
+microbit
+bitio.hex
+findPort.py
