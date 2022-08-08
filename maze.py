@@ -20,6 +20,9 @@ class Maze:
         self.maze_file = None
         self.no_diagonals_pathfinding = False
 
+        # for importing/saving maze files
+        self.active = False
+
         # dragin variables
         self.wall_draging = False
         self.obstacle_draging = False
@@ -89,7 +92,7 @@ class Maze:
             color = INACTIVE_COLOR
             input_box = pygame.Rect((WINDOW_SIZE[0] - 600)/2, (WINDOW_SIZE[1] - 200)/2, 600, 100)
 
-            active = False
+            self.active = False
             done = False
             show_file_promt = False
             while not done:           
@@ -98,17 +101,17 @@ class Maze:
                         done = True
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if input_box.collidepoint(event.pos):
-                            active = not active
+                            self.active = not self.active
                         else:
-                            active = False
-                        color = ACTIVE_COLOR if active else INACTIVE_COLOR
+                            self.active = False
+                        color = ACTIVE_COLOR if self.active else INACTIVE_COLOR
 
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_i:
                             show_file_promt = True
-                        if event.key == pygame.K_n:
+                        if event.key == pygame.K_n and not self.active:
                             self.no_diagonals_pathfinding = not self.no_diagonals_pathfinding
-                        if active:
+                        if self.active:
                             if event.key == pygame.K_RETURN:
                                 done = True
                                 self.maze_file = file_text
