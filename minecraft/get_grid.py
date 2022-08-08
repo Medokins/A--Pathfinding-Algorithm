@@ -6,6 +6,7 @@ import os
 
 from minecraft_settings import *
 
+# run this file from project's main directory not from minecraft directory!
 mc = Minecraft.create()
 x, y, z = mc.player.getPos()
 
@@ -34,7 +35,7 @@ for y in range(HEIGHT + 1):
 grid = np.resize(grid_blocks, (HEIGHT + 1, LENGHT, WIDTH))
 
 start_node = None
-end_node = None
+target_node = None
 layer_counter = 0
 
 df = pd.DataFrame(index=range(LENGHT), columns=range(WIDTH))
@@ -47,13 +48,16 @@ for layer in grid:
             if block_data == 251:
                 if mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 5:
                     df[block_counter][LENGHT - row_counter - 1] = 'S'
+                    start_node = (block_counter, LENGHT - row_counter - 1)
                 elif mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 14:
                     df[block_counter][LENGHT - row_counter - 1] = 'E'
+                    target_node = (block_counter, LENGHT - row_counter - 1)
                 elif mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 15:
                     df[block_counter][LENGHT - row_counter - 1] = '-'
             block_counter += 1
         row_counter += 1
     layer_counter += 1
 
-df.fillna(0, inplace=True)
-df.to_csv(os.path.join("saved_mazes", "minecraft_maze.csv"))
+if start_node != None and target_node != None:
+    df.fillna(0, inplace=True)
+    df.to_csv(os.path.join("saved_mazes", "minecraft_maze.csv"))
