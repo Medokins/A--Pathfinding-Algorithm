@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 # get neighbours with diagonals
-def getNeighboursDiag(node, maze_nodes):
+def getNeighboursDiag(node, maze_nodes, array_size = ARRAY_SIZE):
     neighbours = []
     for x in range(-1, 2):
         for y in range(-1, 2):
@@ -14,33 +14,33 @@ def getNeighboursDiag(node, maze_nodes):
                 checkX = node.x + x
                 checkY = node.y + y
 
-                if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+                if (checkX >= 0 and checkX < array_size[0]) and (checkY >= 0 and checkY < array_size[1]):
                     neighbours.append(maze_nodes[checkX][checkY])
 
     return neighbours
 
 # get neighbours without diagonals
-def getNeighboursNoDiag(node, maze_nodes):
+def getNeighboursNoDiag(node, maze_nodes,  array_size = ARRAY_SIZE):
     neighbours = []
 
     checkX = node.x
     checkY = node.y - 1
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+    if (checkX >= 0 and checkX < array_size[0]) and (checkY >= 0 and checkY < array_size[1]):
         neighbours.append(maze_nodes[checkX][checkY])
 
     checkX = node.x
     checkY = node.y + 1
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+    if (checkX >= 0 and checkX < array_size[0]) and (checkY >= 0 and checkY < array_size[1]):
         neighbours.append(maze_nodes[checkX][checkY])
     
     checkX = node.x - 1
     checkY = node.y
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+    if (checkX >= 0 and checkX < array_size[0]) and (checkY >= 0 and checkY < array_size[1]):
         neighbours.append(maze_nodes[checkX][checkY])
     
     checkX = node.x + 1
     checkY = node.y
-    if (checkX >= 0 and checkX < ARRAY_SIZE[0]) and (checkY >= 0 and checkY < ARRAY_SIZE[1]):
+    if (checkX >= 0 and checkX < array_size[0]) and (checkY >= 0 and checkY < array_size[1]):
         neighbours.append(maze_nodes[checkX][checkY])
 
     return neighbours
@@ -79,6 +79,7 @@ def decode_maze(file_name):
     target_pos = None
     walls = []
     special_nodes = [[] for _ in range(len(WEIGHTS))]
+    SQUARE_SIZE = WINDOW_SIZE[1] // df.shape[1]
 
     for x in range(df.shape[1]):
         for y in range(df.shape[0]):
@@ -95,7 +96,7 @@ def decode_maze(file_name):
                 if character != 0:
                     special_nodes[WEIGHTS.index(character)].append((x*SQUARE_SIZE,y*SQUARE_SIZE))
         
-    return start_pos, target_pos, walls, special_nodes
+    return start_pos, target_pos, walls, special_nodes, df.shape
 
 def get_instructions(path):
     # R - go right, L - go left, D - go down, U - go up
