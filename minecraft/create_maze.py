@@ -44,7 +44,5 @@ def build_maze(file_name, clear_area = False):
                 character = int(character)
                 if character != 0:
                     print(f"Specia; at: {z,x} with weight {character}")
-    print(df)
-    # # maze building 
 
-build_maze("minecraft_maze",  clear_area = True)
+build_maze("bot_maze",  clear_area = True)
