@@ -72,7 +72,6 @@ def getDistance(instructions):
     return current_character, counter
 
 while len(instructions) > 0:
-
     instruction, distance = getDistance(instructions)
     if instruction == 'R':
         moveRight(distance)
