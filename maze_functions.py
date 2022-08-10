@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 import os
 
+def get_settings_square_size():
+    return SQUARE_SIZE
+
 # get neighbours with diagonals
 def getNeighboursDiag(node, maze_nodes, array_size = ARRAY_SIZE):
     neighbours = []
