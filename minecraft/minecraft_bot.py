@@ -20,43 +20,43 @@ x = np.floor(x)
 y = np.floor(y)
 z = np.floor(z)
 mc.player.setPos(x + 0.5, y + 1, z + 0.5)
-time.sleep(3)
-delay = 0.1
+# set correct rotation
+while True:
+        # different rotation is based on screen size for some reason
+        if np.ceil(mc.player.getRotation()) in {-90, 270}:
+            break
+        pydirectinput.moveRel(-1)
+delay = 1.5
 
-def moveRight(duration):
-    margin = MARGIN if duration >= 2 else 0.2
-    z = mc.player.getPos().z
-    print(f"z destination: {z + duration}")
-    while mc.player.getPos().z < np.floor(z + duration) - margin:
-        pydirectinput.keyDown("d")
+def moveRight(distance):
+    start_z_pos = mc.player.getPos().z
+    pydirectinput.keyDown("d")
+    while mc.player.getPos().z < start_z_pos + distance - MARGIN:
+        pass
     pydirectinput.keyUp("d")
     time.sleep(delay)
 
-def moveLeft(duration):
-    margin = MARGIN if duration >= 1 else 0
-    z = mc.player.getPos().z
-    print(f"z destination: {z - duration}")
-    while mc.player.getPos().z > np.ceil(z - duration) + margin:
-        pydirectinput.keyDown("a")
-    pydirectinput.keyUp("a")
+def moveLeft(distance):
+    start_z_pos = mc.player.getPos().z
+    pydirectinput.keyDown("a")
+    while mc.player.getPos().z > start_z_pos - distance + MARGIN:
+        pass
+    pydirectinput.keyUp("w")
     time.sleep(delay)
 
-
-def moveDown(duration):
-    margin = MARGIN if duration >= 1 else 0
-    x = mc.player.getPos().x
-    print(f"x destination: {np.ceil(x - duration)}")
-    while mc.player.getPos().x > np.ceil(x - duration) + margin:
-        pydirectinput.keyDown("s")
+def moveDown(distance):
+    start_x_pos = mc.player.getPos().x
+    pydirectinput.keyDown("s")
+    while mc.player.getPos().x > start_x_pos - distance + MARGIN:
+        pass
     pydirectinput.keyUp("s")
     time.sleep(delay)
 
-def moveUp(duration):
-    margin = MARGIN if duration >= 1 else 0
-    x = mc.player.getPos().x
-    print(f"x destination: {np.floor(x + duration)}")
-    while mc.player.getPos().x < np.floor(x + duration) - margin:
-        pydirectinput.keyDown("w")
+def moveUp(distance):
+    start_x_pos = mc.player.getPos().x
+    pydirectinput.keyDown("w")
+    while mc.player.getPos().x < start_x_pos + distance - MARGIN:
+        pass
     pydirectinput.keyUp("w")
     time.sleep(delay)
 
@@ -73,19 +73,19 @@ def getDistance(instructions):
 
 while len(instructions) > 0:
 
-    instruction, duration = getDistance(instructions)
+    instruction, distance = getDistance(instructions)
     if instruction == 'R':
-        moveRight(duration)
+        moveRight(distance)
     elif instruction == 'L':
-        moveLeft(duration)
+        moveLeft(distance)
     elif instruction == 'D':
-        moveDown(duration)
+        moveDown(distance)
     elif instruction == 'U':
-        moveUp(duration)
+        moveUp(distance)
     else:
         print("Unknown instruction")
         
-    instructions = instructions[duration:]
+    instructions = instructions[distance:]
 
 x, y, z = mc.player.getPos()
 mc.player.setPos(x, y + 25, z)

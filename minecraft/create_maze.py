@@ -43,6 +43,6 @@ def build_maze(file_name, clear_area = False):
             else:
                 character = int(character)
                 if character != 0:
-                    print(f"Specia; at: {z,x} with weight {character}")
+                    print(f"Special at: {z,x} with weight {character}")
 
-build_maze("bot_maze",  clear_area = True)
+build_maze("huge_mess",  clear_area = True)

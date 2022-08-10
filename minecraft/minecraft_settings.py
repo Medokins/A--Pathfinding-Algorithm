@@ -5,5 +5,5 @@ HEIGHT = 0
 START = (251, 5)
 END = (251, 14)
 WALL = (251, 15)
-MARGIN = 0.2
+MARGIN = 0.545
 set_paramiter = False
