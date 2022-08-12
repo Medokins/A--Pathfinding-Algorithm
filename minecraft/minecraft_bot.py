@@ -5,10 +5,12 @@ import sys
 import pydirectinput
 import numpy as np
 
-from minecraft_settings import MARGIN
+from minecraft_settings import MARGIN, PATH
 main_path = os.path.abspath(__file__)
 sys.path.append(os.path.join(main_path, "..", ".."))
 from maze import runMaze, get_instructions
+
+delay = 1
 
 path = runMaze()
 instructions = get_instructions(path)
@@ -20,16 +22,19 @@ x = np.floor(x)
 y = np.floor(y)
 z = np.floor(z)
 mc.player.setPos(x + 0.5, y + 1, z + 0.5)
+
+for node in path[1:-1]:
+    mc.setBlock(x - node.y - 2, y - 1, z + node.x - 1 , PATH)
+
 # set correct rotation
 while True:
         # different rotation is based on screen size for some reason
         if np.ceil(mc.player.getRotation()) in {-90, 270}:
             break
         pydirectinput.moveRel(-1)
-delay = 1.5
 
 def moveRight(distance):
-    start_z_pos = mc.player.getPos().z
+    start_z_pos = np.floor(mc.player.getPos().z) + 0.5
     pydirectinput.keyDown("d")
     while mc.player.getPos().z < start_z_pos + distance - MARGIN:
         pass
@@ -37,7 +42,7 @@ def moveRight(distance):
     time.sleep(delay)
 
 def moveLeft(distance):
-    start_z_pos = mc.player.getPos().z
+    start_z_pos = np.floor(mc.player.getPos().z) + 0.5
     pydirectinput.keyDown("a")
     while mc.player.getPos().z > start_z_pos - distance + MARGIN:
         pass
@@ -45,7 +50,7 @@ def moveLeft(distance):
     time.sleep(delay)
 
 def moveDown(distance):
-    start_x_pos = mc.player.getPos().x
+    start_x_pos = np.floor(mc.player.getPos().x) + 0.5
     pydirectinput.keyDown("s")
     while mc.player.getPos().x > start_x_pos - distance + MARGIN:
         pass
@@ -53,7 +58,7 @@ def moveDown(distance):
     time.sleep(delay)
 
 def moveUp(distance):
-    start_x_pos = mc.player.getPos().x
+    start_x_pos = np.floor(mc.player.getPos().x) + 0.5
     pydirectinput.keyDown("w")
     while mc.player.getPos().x < start_x_pos + distance - MARGIN:
         pass
@@ -86,5 +91,7 @@ while len(instructions) > 0:
         
     instructions = instructions[distance:]
 
-x, y, z = mc.player.getPos()
-mc.player.setPos(x, y + 25, z)
+pydirectinput.keyUp("a")
+pydirectinput.keyUp("w")
+pydirectinput.keyUp("s")
+pydirectinput.keyUp("d")
