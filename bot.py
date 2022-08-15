@@ -13,11 +13,11 @@ def moveLeft(duration):
     pydirectinput.keyDown("a")
     time.sleep(duration/WALK_SPEED)
     pydirectinput.keyUp("a")
-def moveDown(duration):
+def moveBack(duration):
     pydirectinput.keyDown("s")
     time.sleep(duration/WALK_SPEED)
     pydirectinput.keyUp("s")
-def moveUp(duration):
+def moveFront(duration):
     pydirectinput.keyDown("w")
     time.sleep(duration/WALK_SPEED)
     pydirectinput.keyUp("w")
@@ -47,9 +47,9 @@ while len(instructions) > 0:
     elif instruction == 'L':
         moveLeft(duration)
     elif instruction == 'D':
-        moveDown(duration)
+        moveBack(duration)
     elif instruction == 'U':
-        moveUp(duration)
+        moveFront(duration)
     else:
         print("Unknown instruction")
     
