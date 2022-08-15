@@ -38,13 +38,7 @@ class Maze:
         screen.fill(BG_COLOR)
         font = pygame.font.SysFont('Calibri', 24)
 
-        if self.start_pos != None:
-            pygame.draw.rect(screen, START, pygame.Rect(self.start_pos[0], self.start_pos[1], square_size, square_size))
-        if self.target_pos != None:
-            pygame.draw.rect(screen, END, pygame.Rect(self.target_pos[0], self.target_pos[1], square_size, square_size))
-        for wall in self.walls:
-            pygame.draw.rect(screen, WALL, pygame.Rect(wall[0], wall[1], square_size, square_size))
-
+        # draw weigts first since they are walkable and path my go over them
         for i in range(len(WEIGHTS)):
             for node in self.special_nodes[i]:
                 pygame.draw.rect(screen, WEIGHTS_COLORS[i], pygame.Rect(node[0], node[1], square_size, square_size))
@@ -59,8 +53,16 @@ class Maze:
             color = PATHED
         if path != None:
             for node in path:
-                if (node.x * square_size, node.y * square_size) not in {self.start_pos, self.target_pos}:
-                    pygame.draw.rect(screen, color, pygame.Rect(node.x * square_size, node.y * square_size, square_size, square_size))
+                pygame.draw.rect(screen, color, pygame.Rect(node.x * square_size, node.y * square_size, square_size, square_size))
+
+        # draw of start_node, target_node, walls and weights
+        if self.start_pos != None:
+            pygame.draw.rect(screen, START, pygame.Rect(self.start_pos[0], self.start_pos[1], square_size, square_size))
+        if self.target_pos != None:
+            pygame.draw.rect(screen, END, pygame.Rect(self.target_pos[0], self.target_pos[1], square_size, square_size))
+        for wall in self.walls:
+            pygame.draw.rect(screen, WALL, pygame.Rect(wall[0], wall[1], square_size, square_size))
+
 
         # grid creation
         for x in range(0, WINDOW_SIZE[0] - SPACING + 1, square_size):
@@ -230,6 +232,7 @@ def runMaze():
         if maze.state == "menu":
             maze.draw(start_menu=True)
         if maze.maze_file == None:
+            # than draw your own maze:
             maze.x, maze.y = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -238,6 +241,7 @@ def runMaze():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:
                         if maze.start_pos != None and maze.target_pos != None:
+                            layers = 1
                             maze.state = 'ready'
                     if event.key == pygame.K_s:
                         maze.state = "choosing_start_pos"
@@ -264,20 +268,20 @@ def runMaze():
                     square_size = get_settings_square_size()
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if maze.state == "choosing_start_pos":
-                                maze.start_pos = (maze.x // square_size * square_size, maze.y // square_size * square_size)
+                                maze.start_pos = (maze.x // square_size * square_size, maze.y // square_size * square_size, 0)
                         if maze.state == "choosing_target_pos":
-                                maze.target_pos = (maze.x // square_size * square_size, maze.y // square_size * square_size)
+                                maze.target_pos = (maze.x // square_size * square_size, maze.y // square_size * square_size, 0)
 
                     elif event.type == pygame.MOUSEMOTION:
                         if maze.state == "creating_obstacles":
                             if (maze.x // square_size * square_size, maze.y // square_size * square_size) not in {maze.start_pos, maze.target_pos}:
-                                maze.walls.append((maze.x // square_size * square_size , maze.y // square_size * square_size))
+                                maze.walls.append((maze.x // square_size * square_size , maze.y // square_size * square_size, 0))
                         if maze.state == "choosing_weights":
                             # row in my 2d array is corresponding to weight of given node
                             if (maze.x // square_size * square_size, maze.y // square_size * square_size) not in {maze.start_pos, maze.target_pos}:
-                                maze.special_nodes[weight].append((maze.x // square_size * square_size , maze.y // square_size * square_size)) 
+                                maze.special_nodes[weight].append((maze.x // square_size * square_size, maze.y // square_size * square_size, 0)) 
                         if maze.state == "deleting":
-                            node = (maze.x // square_size * square_size, maze.y // square_size * square_size)
+                            node = (maze.x // square_size * square_size, maze.y // square_size * square_size, 0)
                             if node in maze.walls:
                                 maze.walls.remove(node)
                             try:
@@ -287,43 +291,47 @@ def runMaze():
                             except:
                                 pass
         else:
-            # in progress
-            maze.start_pos, maze.target_pos, maze.walls, maze.special_nodes, shape = decode_maze(maze.maze_file)
+            # get an exisitng file
+            maze.start_pos, maze.target_pos, maze.walls, maze.special_nodes, shape, layers = decode_maze(maze.maze_file)
             square_size = WINDOW_SIZE[1] // shape[1]
-            ARRAY_SIZE = [int((WINDOW_SIZE[0] - SPACING) / square_size), int(WINDOW_SIZE[1] / square_size)]
             maze.state = 'ready'
         
         if maze.state == 'ready':
             # path finding
-            ARRAY_SIZE = [int((WINDOW_SIZE[0] - SPACING) / square_size), int(WINDOW_SIZE[1] / square_size)]
-            maze_nodes = np.empty((ARRAY_SIZE), dtype = Node)
+            array_size = [layers, int((WINDOW_SIZE[0] - SPACING) / square_size), int(WINDOW_SIZE[1] / square_size)]
+            maze_nodes = np.empty((array_size), dtype = Node)
 
             # creating grid of nodes
-            for x in range(int((WINDOW_SIZE[0] - SPACING) / square_size)):
-                for y in range(int(WINDOW_SIZE[1] / square_size)):
-                    # because when reading from file indexes are automatically correct
-                    check = (x*square_size,y*square_size)
+            for z in range(layers):
+                for x in range(int((WINDOW_SIZE[0] - SPACING) / square_size)):
+                    for y in range(int(WINDOW_SIZE[1] / square_size)):
+                        # because when reading from file indexes are automatically correct
+                        check = (x*square_size,y*square_size, z)
 
-                    if check == maze.start_pos:
-                        start_node = Node((x,y), walkable = True)
-                        maze_nodes[x][y] = start_node
-                    elif check == maze.target_pos:
-                        target_node = Node((x,y), walkable = True)
-                        maze_nodes[x][y] = target_node
-                    elif check in maze.walls:
-                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = False)
-                    else:
-                        maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True)
-                    for i in range(len(WEIGHTS)):
-                        if check in maze.special_nodes[i]:
-                            maze_nodes[x][y] = Node(coordinates = (x,y), walkable = True, weight = WEIGHTS[i])
+                        if check == maze.start_pos:
+                            start_node = Node(coordinates = (x,y,z), walkable = True)
+                            maze_nodes[z][x][y] = start_node
+                        elif check == maze.target_pos:
+                            target_node = Node(coordinates = (x,y,z), walkable = True)
+                            maze_nodes[z][x][y] = target_node
+                        elif check in maze.walls:
+                            maze_nodes[z][x][y] = Node(coordinates = (x,y,z), walkable = False)
+                        else:
+                            maze_nodes[z][x][y] = Node(coordinates = (x,y,z), walkable = True)
+                        for i in range(len(WEIGHTS)):
+                            if check in maze.special_nodes[i]:
+                                maze_nodes[z][x][y] = Node(coordinates = (x,y,z), walkable = True, weight = WEIGHTS[i])
+
             # list of nodes to process, starting with start_node
-            open_set = Heap(ARRAY_SIZE[0] * ARRAY_SIZE[1])
+            open_set = Heap(array_size[0] * array_size[1] * array_size[1])
             open_set.add(start_node)
             # list of nodes that have been already processed
             closed_set = []
 
             getNeighbours = getNeighboursNoDiag if maze.no_diagonals_pathfinding else getNeighboursDiag
+            if layers > 1:
+                getNeighbours = getNeighbours3d
+            
             refresh_rate = 1/SPEED
 
             while open_set.currentItemCount > 0:
@@ -332,7 +340,8 @@ def runMaze():
 
                 if current_node == target_node:
                     final_path = getPath(start_node, target_node)
-                    maze.draw(available = None, path = final_path, color = FINAL_PATH, square_size = square_size)
+                    if layers == 1:
+                        maze.draw(available = None, path = final_path, color = FINAL_PATH, square_size = square_size)
                     while True:
                         for event in pygame.event.get():
                             if event.type == pygame.QUIT:
@@ -342,14 +351,13 @@ def runMaze():
                             if event.type == pygame.KEYDOWN:
                                 if event.key == pygame.K_s:
                                     name = maze.draw(save=True)
-                                    df = pd.DataFrame(index=range(ARRAY_SIZE[0]), columns=range(ARRAY_SIZE[1]))
-                                    for x in range(ARRAY_SIZE[0]):
-                                        for y in range(ARRAY_SIZE[1]):
+                                    df = pd.DataFrame(index=range(array_size[1]), columns=range(array_size[2]))
+                                    for x in range(array_size[1]):
+                                        for y in range(array_size[2]):
                                             # if it's not a wall => it's walkable => check if it has weight to it
                                             # else, mark wall as "-" (for better visualisation in dataframe)
-                                            if maze_nodes[x][y].walkable:
-                                                df[x][y] = int(maze_nodes[x][y].weight)
-                                            #print(f"Column {node.x}, Row {node.y}, Walkable: {node.walkable}, Weight {node.weight}")
+                                            if maze_nodes[0][x][y].walkable:
+                                                df[x][y] = int(maze_nodes[0][x][y].weight)
                                             else:
                                                 df[x][y] = "-"
 
@@ -357,8 +365,8 @@ def runMaze():
                                     df[start_node.x][start_node.y] = "S"
                                     df[target_node.x][target_node.y] = "E"
 
-                                    df.columns = [f"|{i:03}|" for i in range(ARRAY_SIZE[0])]
-                                    df.index = [f"|{i:03}|" for i in range(ARRAY_SIZE[1])]
+                                    df.columns = [f"|{i:03}|" for i in range(array_size[1])]
+                                    df.index = [f"|{i:03}|" for i in range(array_size[2])]
                                     df.to_csv(os.path.join("saved_mazes", f"{name}.csv"))
 
                                     pygame.quit()
@@ -368,8 +376,7 @@ def runMaze():
                                     pygame.quit()
                                     return final_path
 
-                for neighbour in getNeighbours(current_node, maze_nodes, ARRAY_SIZE):
-
+                for neighbour in getNeighbours(current_node, maze_nodes, array_size):
                     if not neighbour.walkable or neighbour in closed_set:
                         continue
                     
