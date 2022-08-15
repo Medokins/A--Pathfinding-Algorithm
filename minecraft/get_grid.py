@@ -52,6 +52,10 @@ for layer in grid:
     for row in layer:
         block_counter = 0
         for block_data in row:
+            # checking if block is AIR or not
+            if mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).id != 0:
+                # leaving it as wall for now, will change to correct weight in the future
+                df[block_counter][LENGHT - row_counter - 1] = '-'
             if block_data == 251:
                 if mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 5:
                     df[block_counter][LENGHT - row_counter - 1] = 'S'
@@ -59,11 +63,6 @@ for layer in grid:
                 elif mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 14:
                     df[block_counter][LENGHT - row_counter - 1] = 'E'
                     target_node = (block_counter, LENGHT - row_counter - 1)
-                elif mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 15:
-                    df[block_counter][LENGHT - row_counter - 1] = '-'
-                elif mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).id != 0:
-                    # leaving it as wall for now, will change to correct weight in the future
-                    df[block_counter][LENGHT - row_counter - 1] = '-'
             block_counter += 1
         row_counter += 1
     
