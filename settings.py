@@ -2,6 +2,7 @@ from numpy import Inf
 
 SQUARE_SIZE = 50
 LIVE_VIEW = False
+PLAYER_AVAILABLE_PATH = False
 
 WINDOW_SIZE = (1300, 1000)
 SPACING = 300
