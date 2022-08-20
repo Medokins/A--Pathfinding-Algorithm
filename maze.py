@@ -329,9 +329,9 @@ def runMaze():
             closed_set = []
 
             # modify maze_nodes to find walkable by player path
+            # THIS NEED TO BE CHANGED TO LOOK FOR FULL DIAGONALS
             if PLAYER_AVAILABLE_PATH:
                 corrcted_nodes = maze_nodes
-
                 for z in range(1, len(maze_nodes) - 1):
                     for x in range(len(maze_nodes[0])):
                         for y in range(len(maze_nodes[0][0])):
@@ -339,19 +339,18 @@ def runMaze():
                                 # check if there is solid block underneath and block above current block is air
                                 if not maze_nodes[z-1][x][y].walkable and maze_nodes[z+1][x][y].walkable:
                                     corrcted_nodes[z][x][y].walkable = True
+                                    corrcted_nodes[z+1][x][y].walkable = True
                                 else:
                                     corrcted_nodes[z][x][y].walkable = False
+                                # since I can't walk up diagonally blocks on diagonals have to be walkable too
+                maze_nodes[start_node.z + 1][start_node.x][start_node.y].walkable = True
+                maze_nodes[target_node.z + 1][target_node.x][target_node.y].walkable = True
 
-                start_node =  Node(coordinates = (start_node.x,start_node.y,start_node.z + 1), walkable = True)
-                target_node = Node(coordinates = (target_node.x,target_node.y,target_node.z + 1), walkable = True)
-                open_set = Heap(array_size[0] * array_size[1] * array_size[1])
-                open_set.add(start_node)
-            
             counter = 0
-            for z in range(len(maze_nodes)):
+            for z in range(len(corrcted_nodes)):
                 print(f"\nLayer{counter}\n")
-                for x in range(len(maze_nodes[0])):
-                    for y in range(len(maze_nodes[0][0])):
+                for x in range(len(corrcted_nodes[0])):
+                    for y in range(len(corrcted_nodes[0][0])):
                         print(corrcted_nodes[z][y][x].walkable, end = " ")
                     print(" ")
                 counter += 1
@@ -367,7 +366,10 @@ def runMaze():
             while open_set.currentItemCount > 0:
                 current_node = open_set.removeFirst()
                 closed_set.append(current_node)
+                for node in closed_set:
+                    print(node.x, node.y, node.z)
                 if current_node == target_node:
+                    print("found path")
                     final_path = getPath(start_node, target_node)
                     if layers == 1:
                         maze.draw(available = None, path = final_path, color = FINAL_PATH, square_size = square_size)
@@ -423,6 +425,7 @@ def runMaze():
                         else:
                             # if better path to given node is found, update that node's costs accordingly
                             open_set.updateItem(neighbour)
+            break
 
         else:
             maze.draw()
