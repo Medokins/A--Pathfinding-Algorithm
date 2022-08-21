@@ -327,35 +327,63 @@ def runMaze():
             open_set.add(start_node)
             # list of nodes that have been already processed
             closed_set = []
-
+      
             # modify maze_nodes to find walkable by player path
-            # THIS NEED TO BE CHANGED TO LOOK FOR FULL DIAGONALS
+            # this turned to be much harder than I thought it'll be, this one does not work yet, but im making progress
             if PLAYER_AVAILABLE_PATH:
-                corrcted_nodes = maze_nodes
+                start_node.walkable = False
+                # create copy of maze_array, with different objects (but with the same values), so I don't check against changed values
+                corrected_nodes = np.empty((array_size), dtype = Node)
+                for z in range(len(maze_nodes)):
+                    for x in range(len(maze_nodes[0])):
+                        for y in range(len(maze_nodes[0][0])):
+                            node = maze_nodes[z][x][y]
+                            corrected_nodes[z][x][y] = Node((node.x,node.y,node.z), node.walkable, node.weight)
+
                 for z in range(1, len(maze_nodes) - 1):
                     for x in range(len(maze_nodes[0])):
                         for y in range(len(maze_nodes[0][0])):
                             if maze_nodes[z][x][y].walkable:
                                 # check if there is solid block underneath and block above current block is air
                                 if not maze_nodes[z-1][x][y].walkable and maze_nodes[z+1][x][y].walkable:
-                                    corrcted_nodes[z][x][y].walkable = True
-                                    corrcted_nodes[z+1][x][y].walkable = True
+                                    corrected_nodes[z][x][y].walkable = True
                                 else:
-                                    corrcted_nodes[z][x][y].walkable = False
-                                # since I can't walk up diagonally blocks on diagonals have to be walkable too
+                                    corrected_nodes[z][x][y].walkable = False
                 maze_nodes[start_node.z + 1][start_node.x][start_node.y].walkable = True
                 maze_nodes[target_node.z + 1][target_node.x][target_node.y].walkable = True
 
-            counter = 0
-            for z in range(len(corrcted_nodes)):
-                print(f"\nLayer{counter}\n")
-                for x in range(len(corrcted_nodes[0])):
-                    for y in range(len(corrcted_nodes[0][0])):
-                        print(corrcted_nodes[z][y][x].walkable, end = " ")
-                    print(" ")
-                counter += 1
-            
-            maze_nodes = corrcted_nodes
+                # now I need to fill in gaps in between diagonals since I can't walk diagonally as player
+                def check_to_fill(node, corrected_nodes):
+                    if node.x + 1 < len(corrected_nodes[0]):
+                        if corrected_nodes[node.z + 1][node.x + 1][node.y].walkable:
+                            corrected_nodes[node.z + 1][node.x][node.y].walkable = True
+                    if node.x - 1 >= 0:
+                        if corrected_nodes[node.z + 1][node.x - 1][node.y].walkable:
+                            corrected_nodes[node.z + 1][node.x][node.y].walkable = True
+                    if node.y + 1 < len(corrected_nodes[0][0]):
+                        if corrected_nodes[node.z + 1][node.x][node.y + 1].walkable:
+                            corrected_nodes[node.z + 1][node.x][node.y].walkable = True
+                    if node.y - 1 >= 0:
+                        if corrected_nodes[node.z + 1][node.x][node.y - 1].walkable:
+                            corrected_nodes[node.z + 1][node.x][node.y].walkable = True
+
+                for layer in corrected_nodes[:-1]:
+                    for row in layer:
+                        for node in row:
+                            if node.walkable:
+                                check_to_fill(node, corrected_nodes)
+                
+                counter = 0
+                for z in range(len(corrected_nodes)):
+                    print(f"\nLayer {counter}\n")
+                    for x in range(len(corrected_nodes[0])):
+                        for y in range(len(corrected_nodes[0][0])):
+                            print(corrected_nodes[z][y][x].walkable, end = " ")
+                        print(" ")
+                    counter += 1
+
+            break
+            maze_nodes = corrected_nodes
 
             getNeighbours = getNeighboursNoDiag if maze.no_diagonals_pathfinding else getNeighboursDiag
             if layers > 1:
@@ -366,8 +394,6 @@ def runMaze():
             while open_set.currentItemCount > 0:
                 current_node = open_set.removeFirst()
                 closed_set.append(current_node)
-                for node in closed_set:
-                    print(node.x, node.y, node.z)
                 if current_node == target_node:
                     print("found path")
                     final_path = getPath(start_node, target_node)
