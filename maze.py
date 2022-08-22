@@ -329,7 +329,8 @@ def runMaze():
             closed_set = []
       
             # modify maze_nodes to find walkable by player path
-            # this turned to be much harder than I thought it'll be, this one does work, but target node doesn't have parent node for some reason so It cannot retract path
+            # this turned to be a bit tricky, algorithm below does work, but target node doesn't have parent node for some reason so It cannot retract path
+            # I'll work the solution later
             if PLAYER_AVAILABLE_PATH:
                 start_node.walkable = False
                 target_node.walkable = False
