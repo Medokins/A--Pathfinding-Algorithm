@@ -329,8 +329,6 @@ def runMaze():
             closed_set = []
       
             # modify maze_nodes to find walkable by player path
-            # this turned to be a bit tricky, algorithm below does work, but target node doesn't have parent node for some reason so It cannot retract path
-            # I'll work the solution later
             if PLAYER_AVAILABLE_PATH:
                 start_node.walkable = False
                 target_node.walkable = False
@@ -381,15 +379,6 @@ def runMaze():
                 maze_nodes = corrected_nodes
                 target_node.z += 1
 
-                counter = 0
-                for z in range(len(corrected_nodes)):
-                    print(f"\nLayer {counter}\n")
-                    for x in range(len(corrected_nodes[0])):
-                        for y in range(len(corrected_nodes[0][0])):
-                            print(corrected_nodes[z][y][x].walkable, end = " ")
-                        print(" ")
-                    counter += 1
-
             getNeighbours = getNeighboursNoDiag if maze.no_diagonals_pathfinding else getNeighboursDiag
             if layers > 1:
                 getNeighbours = getNeighbours3d
@@ -401,7 +390,8 @@ def runMaze():
                 closed_set.append(current_node)
                 
                 if (current_node.z, current_node.x, current_node.y) == (target_node.z, target_node.x, target_node.y):
-                    print("found path")
+                    if PLAYER_AVAILABLE_PATH:
+                        target_node.parent = current_node
                     final_path = getPath(start_node, target_node)
                     if layers == 1:
                         maze.draw(available = None, path = final_path, color = FINAL_PATH, square_size = square_size)
@@ -448,7 +438,6 @@ def runMaze():
                         neighbour.G_cost = newCostToNeighbour
                         neighbour.H_cost = getDistance(neighbour, target_node)
                         neighbour.parent = current_node
-
                         if not open_set.contains(neighbour):
                             open_set.add(neighbour)
                             if LIVE_VIEW:
@@ -458,8 +447,5 @@ def runMaze():
                             # if better path to given node is found, update that node's costs accordingly
                             open_set.updateItem(neighbour)
 
-            for node in closed_set:
-                print(node.z, node.x, node.y)
-            break
         else:
             maze.draw()
