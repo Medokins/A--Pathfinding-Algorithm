@@ -1,7 +1,7 @@
 ﻿# A* Pathfinding-Algorithm
 
-I'm currently working on another way of getting minecraft data since mcpi version takes ages to process
-I found solution to not wait for server response while sending requests and will try to implement that soon.
+I'm currently working on another way of getting minecraft data since mcpi version takes ages to process.</br>
+I found solution to not wait for server response while sending requests and I will try to implement that in the future.
 
 ## Table of contents
 * [General info](#general-info)
