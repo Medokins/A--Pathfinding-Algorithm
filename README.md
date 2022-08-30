@@ -1,7 +1,8 @@
 ﻿# A* Pathfinding-Algorithm
 
 I'm currently working on another way of getting minecraft data since mcpi version takes ages to process.</br>
-I found solution to not wait for server response while sending requests and I will try to implement that in the future.
+I found solution to not wait for server response while sending requests and I will try to implement that in the future.</br>
+In the end I want to implement server plugin to get in-game data so this bot can be used on online servers.
 
 ## Table of contents
 * [General info](#general-info)
