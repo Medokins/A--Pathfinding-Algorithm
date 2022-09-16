@@ -177,10 +177,8 @@ def get_blocks(start_block, end_block):
     total_block_count = my_cuboid.total_blocks()
     overall_time = endtime - starttime
 
-    print("Total", total_block_count, "blocks in",
-          overall_time, 'seconds using', what_test)
-    print("Overall:", total_block_count / overall_time,
-          "blocks/second")
+    print("Total", total_block_count, "blocks in", overall_time, 'seconds using', what_test)
+    print("Overall:", total_block_count / overall_time, "blocks/second")
 
 # start_block [x,y,z], end_block [x,y,z]
 get_blocks(start_block = [0, 81, 14], end_block = [101, 83, 115])
