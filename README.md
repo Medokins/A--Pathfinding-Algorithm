@@ -1,8 +1,7 @@
 ﻿# A* Pathfinding-Algorithm
 
 I'm currently working on another way of getting minecraft data since mcpi version takes ages to process.</br>
-I found solution to not wait for server response while sending requests and I will try to implement that in the future.</br>
-
+I found solution to that written by [Joseph Reynolds](https://github.com/joseph-reynolds) and I updeated it to work in python3 with minor tweaks. </br>
 
 ## Table of contents
 * [General info](#general-info)
