@@ -157,10 +157,16 @@ def query_blocks(requests, fmt, parse_fn, thread_count = 32):
 
 def try_multiple_threads_socket_stuffing(input_cuboid):
     my_blocks = {}
-    for pos, blk in query_blocks(input_cuboid.generate(),"world.getBlock(%d,%d,%d)", int, thread_count=16):
+    get_blocks_with_data = False
+    if get_blocks_with_data:
+        command = "world.getBlockWithData(%d,%d,%d)"
+    else:
+        command = "world.getBlock(%d,%d,%d)"
+    for pos, blk in query_blocks(input_cuboid.generate(), command, int, thread_count=16):
         my_blocks[pos] = blk
     return my_blocks
 
+# start_block [x,y,z], end_block [x,y,z]
 def get_blocks(start_block, end_block):
     try:
         minecraft.Minecraft.create()
@@ -169,16 +175,18 @@ def get_blocks(start_block, end_block):
         raise e
     
     my_cuboid = Cuboid((start_block[0],end_block[0]), (start_block[1],end_block[1]), (start_block[2],end_block[2]))
+    #my_blocks = try_multiple_threads_socket_stuffing(my_cuboid)
 
-    starttime = timeit.default_timer()
-    what_test = "multiple_threads_socket_stuffing"
-    my_blocks = try_multiple_threads_socket_stuffing(my_cuboid)
-    endtime = timeit.default_timer()
-    total_block_count = my_cuboid.total_blocks()
-    overall_time = endtime - starttime
+    test_efficiency = True
+    if test_efficiency:
+        starttime = timeit.default_timer()
+        what_test = "multiple_threads_socket_stuffing"
+        my_blocks = try_multiple_threads_socket_stuffing(my_cuboid)
+        endtime = timeit.default_timer()
+        total_block_count = my_cuboid.total_blocks()
+        overall_time = endtime - starttime
 
-    print("Total", total_block_count, "blocks in", overall_time, 'seconds using', what_test)
-    print("Overall:", total_block_count / overall_time, "blocks/second")
+        print("Total", total_block_count, "blocks in", overall_time, 'seconds using', what_test)
+        print("Overall:", total_block_count / overall_time, "blocks/second")
 
-# start_block [x,y,z], end_block [x,y,z]
-get_blocks(start_block = [0, 81, 14], end_block = [101, 83, 115])
+    return my_blocks
