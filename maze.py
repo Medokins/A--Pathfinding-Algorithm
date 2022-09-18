@@ -327,9 +327,15 @@ def runMaze():
             open_set.add(start_node)
             # list of nodes that have been already processed
             closed_set = []
-      
+            
+            if layers > 1:
+                print("Chose 3D pathfinding")
+                three_dimensional_pathfinding = True
+                getNeighbours = getNeighbours3d
+            else:
+                three_dimensional_pathfinding = False
             # modify maze_nodes to find walkable by player path
-            if PLAYER_AVAILABLE_PATH:
+            if three_dimensional_pathfinding:
                 start_node.walkable = False
                 target_node.walkable = False
                 # create copy of maze_array, with different objects (but with the same values), so I don't check against changed values
@@ -380,9 +386,6 @@ def runMaze():
                 target_node.z += 1
 
             getNeighbours = getNeighboursNoDiag if maze.no_diagonals_pathfinding else getNeighboursDiag
-            if layers > 1:
-                getNeighbours = getNeighbours3d
-            
             refresh_rate = 1/SPEED
 
             while open_set.currentItemCount > 0:
@@ -390,7 +393,7 @@ def runMaze():
                 closed_set.append(current_node)
                 
                 if (current_node.z, current_node.x, current_node.y) == (target_node.z, target_node.x, target_node.y):
-                    if PLAYER_AVAILABLE_PATH:
+                    if three_dimensional_pathfinding:
                         target_node.parent = current_node
                     final_path = getPath(start_node, target_node)
                     if layers == 1:
