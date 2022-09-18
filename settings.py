@@ -3,8 +3,6 @@ from numpy import Inf
 SQUARE_SIZE = 50
 # use only with 2d pathfinding
 LIVE_VIEW = False
-# use only with 3d pathfinding
-PLAYER_AVAILABLE_PATH = True
 
 WINDOW_SIZE = (1300, 1000)
 SPACING = 300
