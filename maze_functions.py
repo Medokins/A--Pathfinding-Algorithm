@@ -85,8 +85,7 @@ def decode_maze(file_name):
             df.drop("Unnamed: 0", axis = 1, inplace=True)
             df.columns = range(df.columns.size)
         except:
-            print(f"Import Error: There is no file named: {file_name}.csv in saved_mazes directory\
-                    nor there is no directory named: {file_name} in 3d_mazes directory")
+            print(f"Import Error: There is no file named: {file_name}.csv in saved_mazes directory nor there is no directory named: {file_name} in 3d_mazes directory")
             quit()
 
     start_pos = None
