@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import mcpi.minecraft as minecraft
 import collections
-import io
 import select
 import socket
 import threading
@@ -30,59 +29,9 @@ class Cuboid:
             for y in range(*self.y_range):
                 for z in range(*self.z_range):
                     yield (x, y, z)
-                    
-    def generate_xz(self):
-        for x in range(*self.x_range):
-            for z in range(*self.z_range):
-                yield (x, z)
 
     def total_blocks(self):
-        return ((self.x_range[1] - self.x_range[0]) *
-                (self.y_range[1] - self.y_range[0]) *
-                (self.z_range[1] - self.z_range[0]))
-
-def do_queries_with_socket_stuffing(connection, requests, fmt, parse_fn):
-    request_buffer = bytes()
-    request_file = io.FileIO(connection.socket.fileno(), "w", closefd=False)
-    request_queue = collections.deque()
-    have_more_requests = True
-    response_file = io.FileIO(connection.socket.fileno(), "r", closefd=False)
-    response_buffer = bytes()
-
-    request_iter = iter(requests)
-    while have_more_requests or len(request_queue) > 0:
-        while have_more_requests and len(request_buffer) < 4096:
-            try:
-                request = request_iter.next()
-            except StopIteration:
-                have_more_requests = False
-                continue
-            request_buffer = request_buffer + (fmt % request) + "\n"
-            request_queue.append(request)
-
-        w = [request_file] if len(request_buffer) > 0 else []
-        r, w, x = select.select([response_file], w, [], 5)
-        allow_read = bool(r)
-        allow_write = bool(w)
-
-        if allow_write:
-            bytes_written = request_file.write(request_buffer)
-            request_buffer = request_buffer[bytes_written:]
-            if bytes_written == 0:
-                raise RuntimeError("unexpected socket.file.write()=0")
-
-        if allow_read:
-            bytes_read = connection.socket.recv(1024)
-            response_buffer = response_buffer + bytes_read
-            if bytes_read == 0:
-                raise RuntimeError("unexpected socket.recv()=0")
-
-        responses = response_buffer.split("\n")
-        response_buffer = responses[-1]
-        responses = responses[:-1]
-        for response_string in responses:
-            request = request_queue.popleft()
-            yield (request, parse_fn(response_string))
+        return ((self.x_range[1] - self.x_range[0]) * (self.y_range[1] - self.y_range[0]) * (self.z_range[1] - self.z_range[0]))
 
 def query_blocks(requests, fmt, parse_fn, thread_count = 32):
     def worker_fn(mc_socket, request_iter, request_lock, answer_queue,):
@@ -135,7 +84,7 @@ def query_blocks(requests, fmt, parse_fn, thread_count = 32):
         workers = []
         threading.stack_size(128 * 1024)
         for w in range(thread_count):
-            t = threading.Thread(target = worker_fn,args = (sockets[w], iter(requests), request_lock, answer_queue))
+            t = threading.Thread(target = worker_fn, args = (sockets[w], iter(requests), request_lock, answer_queue))
             t.start()
             workers.append(t)
 
@@ -157,12 +106,7 @@ def query_blocks(requests, fmt, parse_fn, thread_count = 32):
 
 def try_multiple_threads_socket_stuffing(input_cuboid):
     my_blocks = {}
-    get_blocks_with_data = False
-    if get_blocks_with_data:
-        command = "world.getBlockWithData(%d,%d,%d)"
-    else:
-        command = "world.getBlock(%d,%d,%d)"
-    for pos, blk in query_blocks(input_cuboid.generate(), command, int, thread_count=16):
+    for pos, blk in query_blocks(input_cuboid.generate(), "world.getBlock(%d,%d,%d)", int, thread_count=16):
         my_blocks[pos] = blk
     return my_blocks
 
@@ -175,7 +119,7 @@ def get_blocks(start_block, end_block):
         raise e
     
     my_cuboid = Cuboid((start_block[0],end_block[0]), (start_block[1],end_block[1]), (start_block[2],end_block[2]))
-    #my_blocks = try_multiple_threads_socket_stuffing(my_cuboid)
+    #my_blocks = try_multiple_threads_socket_stuffing(my_cuboid, get_blocks_with_data)
 
     test_efficiency = True
     if test_efficiency:
