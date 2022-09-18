@@ -24,14 +24,19 @@ else:
     mc.player.setPos(x + 0.5, y + 1, z + 0.5)
 
 grid_start = (int(x),int(y - 1), int(z))
-grid_end = (int(x + LENGHT), int(y - 1 + HEIGHT), int(z + WIDTH))
+grid_end = (int(x + LENGHT), int(y + HEIGHT), int(z + WIDTH))
 grid_blocks = get_blocks(grid_start, grid_end)
+# sorting because of multithreading, bias for sorting mazes up to BIAS x BIAS size
+grid_blocks = dict(sorted(grid_blocks.items(), key=lambda x: x[0][1]*BIAS + x[0][0]))
 
-grid = np.resize(grid_blocks, (HEIGHT + 1, LENGHT, WIDTH))
+grid = []
+for item in grid_blocks:
+    grid.append(grid_blocks[item])
 
-start_node = None
-target_node = None
-layer_counter = 0
+grid = np.resize(grid, (HEIGHT + 1, LENGHT, WIDTH))
+# flipping by x axis
+for i in range(len(grid)):
+    grid[i] = np.flip(grid[i],0)
 
 if HEIGHT > 1:
     try:
@@ -39,31 +44,33 @@ if HEIGHT > 1:
     except FileExistsError:
         print("Directory with that name already exists")
 
-# TO BE CHANGED
+start_node = None
+target_node = None
+layer_counter = 0
+for layer in grid:
+    df = pd.DataFrame(index=range(LENGHT), columns=range(WIDTH))
+    row_counter = 0
+    for row in layer:
+        block_counter = 0
+        for block_data in row:
+            current_block = grid[layer_counter][row_counter][block_counter]
+            # checking if block is AIR or not
+            if current_block != 0:
+                df[block_counter][row_counter] = '-'
+            if current_block == 251:
+                if mc.getBlockWithData(grid_start[0] + LENGHT - row_counter - 1, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 5:
+                    df[block_counter][row_counter] = 'S'
+                    start_node = (block_counter, row_counter)
+                if mc.getBlockWithData(grid_start[0] + LENGHT - row_counter - 1, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 14:
+                    df[block_counter][row_counter]= 'E'
+                    target_node = (block_counter, row_counter)
 
-# for layer in grid:
-#     df = pd.DataFrame(index=range(LENGHT), columns=range(WIDTH))
-#     row_counter = 0
-#     for row in layer:
-#         block_counter = 0
-#         for block_data in row:
-#             # checking if block is AIR or not
-#             if mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).id != 0:
-#                 # leaving it as wall for now, will change to correct weight in the future
-#                 df[block_counter][LENGHT - row_counter - 1] = '-'
-#             if block_data == 251:
-#                 if mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 5:
-#                     df[block_counter][LENGHT - row_counter - 1] = 'S'
-#                     start_node = (block_counter, LENGHT - row_counter - 1)
-#                 elif mc.getBlockWithData(grid_start[0] + row_counter, grid_start[1] + layer_counter, grid_start[2] + block_counter).data == 14:
-#                     df[block_counter][LENGHT - row_counter - 1] = 'E'
-#                     target_node = (block_counter, LENGHT - row_counter - 1)
-#             block_counter += 1
-#         row_counter += 1
+            block_counter += 1
+        row_counter += 1
     
-#     df.fillna(0, inplace=True)
-#     if HEIGHT > 1:
-#         df.to_csv(os.path.join("3d_mazes", maze_3d_name, f"layer_{layer_counter}.csv"))
-#     else:
-#          df.to_csv(os.path.join("saved_mazes", f"{maze_2d_name}.csv"))
-#     layer_counter += 1
+    df.fillna(0, inplace=True)
+    if HEIGHT > 1:
+        df.to_csv(os.path.join("3d_mazes", maze_3d_name, f"layer_{layer_counter}.csv"))
+    else:
+         df.to_csv(os.path.join("saved_mazes", f"{maze_2d_name}.csv"))
+    layer_counter += 1
