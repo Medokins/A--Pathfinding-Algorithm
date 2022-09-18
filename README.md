@@ -1,7 +1,7 @@
 ﻿# A* Pathfinding-Algorithm
 
-I'm currently working on another way of getting minecraft data since mcpi version takes ages to process.</br>
-I found solution to that written by [Joseph Reynolds](https://github.com/joseph-reynolds) and I updeated it to work in python3 with minor tweaks. </br>
+2D version is working flawlessly, but 3D still needs some updates since it stopped working when I changed data gathering from Miencraft method.
+I'm currently working on solution to that.
 
 ## Table of contents
 * [General info](#general-info)
@@ -19,6 +19,7 @@ mcpi - acquiring minecraft data. (althought it's really slow on big scale, and I
 numpy - for faster maze_functions.</br>
 pandas - for clear in-file quick visualisation and maze saving.</br>
 pydirectinput - for bot movement in game (it's not 100% precise yet)</br>
+multithreading socket stuffing algorithm writted mostly [Joseph Reynolds](https://github.com/joseph-reynolds) with my minor tweaks to work in python3. </br>
 
 ## Setup
 If you want to play around with 2d version just get required libraries and start main.py script.
