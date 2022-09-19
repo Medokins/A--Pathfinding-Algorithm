@@ -329,11 +329,10 @@ def runMaze():
             closed_set = []
             
             if layers > 1:
-                print("Chose 3D pathfinding")
                 three_dimensional_pathfinding = True
-                getNeighbours = getNeighbours3d
             else:
                 three_dimensional_pathfinding = False
+
             # modify maze_nodes to find walkable by player path
             if three_dimensional_pathfinding:
                 start_node.walkable = False
@@ -349,7 +348,7 @@ def runMaze():
                 for z in range(1, len(maze_nodes)):
                     for x in range(len(maze_nodes[0])):
                         for y in range(len(maze_nodes[0][0])):
-                            if z != len(maze_nodes):
+                            if z < len(maze_nodes) - 1:
                                 if maze_nodes[z][x][y].walkable:
                                     # check if there is solid block underneath and block above current block is air
                                     if not maze_nodes[z-1][x][y].walkable and maze_nodes[z+1][x][y].walkable:
@@ -357,23 +356,23 @@ def runMaze():
                                     else:
                                         corrected_nodes[z][x][y].walkable = False
                             else:
-                                maze_nodes[z][x][y].walkable = False
+                                corrected_nodes[z][x][y].walkable = False
 
-                # now I need to fill in gaps in between diagonals since I can't walk diagonally as player
-                def check_to_fill(node, maze_nodes, corected_nodes):
+
+                #now I need to fill in gaps in between diagonals since I can't walk diagonally as player
+                def check_to_fill(node, maze_nodes, corrected_nodes):
                     if node.x + 1 < len(maze_nodes[0]):
                         if maze_nodes[node.z + 1][node.x + 1][node.y].walkable and not maze_nodes[node.z][node.x + 1][node.y].walkable:
-                            corected_nodes[node.z + 1][node.x][node.y].walkable = True
+                            corrected_nodes[node.z + 1][node.x][node.y].walkable = True
                     if node.x - 1 >= 0:
                         if maze_nodes[node.z + 1][node.x - 1][node.y].walkable and not maze_nodes[node.z][node.x - 1][node.y].walkable:
-                            corected_nodes[node.z + 1][node.x][node.y].walkable = True
+                            corrected_nodes[node.z + 1][node.x][node.y].walkable = True
                     if node.y + 1 < len(maze_nodes[0][0]):
                         if maze_nodes[node.z + 1][node.x][node.y + 1].walkable and not maze_nodes[node.z][node.x][node.y + 1].walkable:
-                            corected_nodes[node.z + 1][node.x][node.y].walkable = True
+                            corrected_nodes[node.z + 1][node.x][node.y].walkable = True
                     if node.y - 1 >= 0:
                         if maze_nodes[node.z + 1][node.x][node.y - 1].walkable and not maze_nodes[node.z][node.x][node.y - 1].walkable:
                             corrected_nodes[node.z + 1][node.x][node.y].walkable = True
-
                 for layer in corrected_nodes[:-1]:
                     for row in layer:
                         for node in row:
@@ -385,7 +384,13 @@ def runMaze():
                 maze_nodes = corrected_nodes
                 target_node.z += 1
 
-            getNeighbours = getNeighboursNoDiag if maze.no_diagonals_pathfinding else getNeighboursDiag
+            if maze.no_diagonals_pathfinding:
+                getNeighbours = getNeighboursNoDiag
+            elif three_dimensional_pathfinding:
+                getNeighbours = getNeighbours3d
+            else:
+                getNeighbours = getNeighboursDiag
+
             refresh_rate = 1/SPEED
 
             while open_set.currentItemCount > 0:
@@ -398,6 +403,8 @@ def runMaze():
                     final_path = getPath(start_node, target_node)
                     if layers == 1:
                         maze.draw(available = None, path = final_path, color = FINAL_PATH, square_size = square_size)
+                    else:
+                        return final_path
                     while True:
                         for event in pygame.event.get():
                             if event.type == pygame.QUIT:
@@ -430,8 +437,8 @@ def runMaze():
 
                                 if event.key == pygame.K_q or event.key == pygame.K_RETURN:
                                     pygame.quit()
-                                    return final_path
-
+                                    return 
+                                    
                 for neighbour in getNeighbours(current_node, maze_nodes, array_size):
                     if not neighbour.walkable or neighbour in closed_set:
                         continue
@@ -449,6 +456,5 @@ def runMaze():
                         else:
                             # if better path to given node is found, update that node's costs accordingly
                             open_set.updateItem(neighbour)
-
         else:
             maze.draw()
