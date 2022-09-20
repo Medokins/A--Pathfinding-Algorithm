@@ -33,7 +33,7 @@ class Cuboid:
     def total_blocks(self):
         return ((self.x_range[1] - self.x_range[0]) * (self.y_range[1] - self.y_range[0]) * (self.z_range[1] - self.z_range[0]))
 
-def query_blocks(requests, fmt, parse_fn, thread_count = 32):
+def query_blocks(requests, fmt, parse_fn, thread_count = 10):
     def worker_fn(mc_socket, request_iter, request_lock, answer_queue,):
         more_requests = True
         request_buffer = bytes()
@@ -106,7 +106,7 @@ def query_blocks(requests, fmt, parse_fn, thread_count = 32):
 
 def try_multiple_threads_socket_stuffing(input_cuboid):
     my_blocks = {}
-    for pos, blk in query_blocks(input_cuboid.generate(), "world.getBlock(%d,%d,%d)", int, thread_count=16):
+    for pos, blk in query_blocks(input_cuboid.generate(), "world.getBlock(%d,%d,%d)", int, thread_count=5):
         my_blocks[pos] = blk
     return my_blocks
 
