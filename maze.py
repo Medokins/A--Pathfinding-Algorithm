@@ -358,7 +358,6 @@ def runMaze():
                             else:
                                 corrected_nodes[z][x][y].walkable = False
 
-
                 #now I need to fill in gaps in between diagonals since I can't walk diagonally as player
                 def check_to_fill(node, maze_nodes, corrected_nodes):
                     if node.x + 1 < len(maze_nodes[0]):
@@ -370,9 +369,10 @@ def runMaze():
                     if node.y + 1 < len(maze_nodes[0][0]):
                         if maze_nodes[node.z + 1][node.x][node.y + 1].walkable and not maze_nodes[node.z][node.x][node.y + 1].walkable:
                             corrected_nodes[node.z + 1][node.x][node.y].walkable = True
-                    if node.y - 1 >= 0:
+                    if node.y - 1 >= 0 :
                         if maze_nodes[node.z + 1][node.x][node.y - 1].walkable and not maze_nodes[node.z][node.x][node.y - 1].walkable:
                             corrected_nodes[node.z + 1][node.x][node.y].walkable = True
+
                 for layer in corrected_nodes[:-1]:
                     for row in layer:
                         for node in row:
