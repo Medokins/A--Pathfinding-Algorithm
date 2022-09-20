@@ -1,8 +1,5 @@
 ﻿# A* Pathfinding-Algorithm
 
-2D version is working flawlessly, but 3D still needs some updates since it stopped working when I changed data gathering from Miencraft method.
-I'm currently working on solution to that.
-
 ## Table of contents
 * [General info](#general-info)
 * [Technologies](#technologies)
@@ -53,4 +50,8 @@ Drawing maze is done with keys shown in menu, you can choose between normal path
 Finally, you can change square_size when creating your own mazes in settings file, as well as changing LIVE_VIEW option to True if you want
 to see algorithm working live, looking for shortest path and updating all the nodes accordingly.</br>
 <img src="./imgs/settings.png" alt="settings file" style="width:100%;" />
-PS. You can also change weights values and colors as you like.
+PS. You can also change weights values and colors as you like.</br></br>
+
+On the last note:</br>
+2D version is working flawlessly, 3D pathfinding algorithm works great, but gathering data from Minecraft on a big scale is troubling, since it gives different values each time </br>
+it is run with the same get_grid() function (it is most likely due to multithreading and mc server not keeping up). I might try to read into that in the future, but for now I'm leaving this working version as it is.
