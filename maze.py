@@ -437,7 +437,7 @@ def runMaze():
 
                                 if event.key == pygame.K_q or event.key == pygame.K_RETURN:
                                     pygame.quit()
-                                    return 
+                                    return final_path
                                     
                 for neighbour in getNeighbours(current_node, maze_nodes, array_size):
                     if not neighbour.walkable or neighbour in closed_set:
