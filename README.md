@@ -16,7 +16,7 @@ mcpi - acquiring minecraft data. (althought it's really slow on big scale, and I
 numpy - for faster maze_functions.</br>
 pandas - for clear in-file quick visualisation and maze saving.</br>
 pydirectinput - for bot movement in game (it's not 100% precise yet)</br>
-multithreading socket stuffing algorithm writted mostly [Joseph Reynolds](https://github.com/joseph-reynolds) with my minor tweaks to work in python3. </br>
+multithreading socket stuffing algorithm written mostly by [Joseph Reynolds](https://github.com/joseph-reynolds) with my minor tweaks to work in python3 to speed up acquring data.</br>
 
 ## Setup
 If you want to play around with 2d version just get required libraries and start main.py script.
